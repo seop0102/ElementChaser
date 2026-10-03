@@ -27,6 +27,7 @@
 
 # Visual Studio cache directory
 .vs/
+.vscode/
 
 # Gradle cache directory
 .gradle/
@@ -37,6 +38,7 @@ ExportedObj/
 *.csproj
 *.unityproj
 *.sln
+*.slnx
 *.suo
 *.tmp
 *.user
@@ -77,3 +79,15 @@ crashlytics-build.properties
 # KUBIKOS asset - install separately
 /Assets/KUBIKOS - World/
 /Assets/KUBIKOS - World.meta
+
+# JetBrains Rider / IntelliJ
+.idea/
+**/.idea/
+*.iml
+
+# Unity scene recovery backups
+/Assets/_Recovery/
+/Assets/_Recovery.meta
+
+# Local Steam test App ID
+steam_appid.txt
