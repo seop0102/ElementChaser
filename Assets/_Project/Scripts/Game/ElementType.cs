@@ -3,5 +3,6 @@ public enum ElementType
     Water,
     Fire,
     Grass,
-    Wind
+    Wind,
+    Normal
 }
