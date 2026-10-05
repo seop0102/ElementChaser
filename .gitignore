@@ -85,6 +85,10 @@ crashlytics-build.properties
 **/.idea/
 *.iml
 
+# PolyOne character asset - install separately
+/Assets/PolyOne/
+/Assets/PolyOne.meta
+
 # Unity scene recovery backups
 /Assets/_Recovery/
 /Assets/_Recovery.meta
