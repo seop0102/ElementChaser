@@ -1,12 +1,14 @@
+using Mirror;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovement : NetworkBehaviour
 {
     [SerializeField] private float moveSpeed = 5f;
 
     void Update()
     {
+        if (!isLocalPlayer) return;
         Vector2 input = Vector2.zero;
 
         if (Keyboard.current != null)
