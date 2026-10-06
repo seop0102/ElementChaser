@@ -1,18 +1,17 @@
 using System;
-
+using UnityEngine;
 // 조합표 조회-결과 반환
 public class CombinationResolver
 {
     private readonly CombinationTable _table;   //조합표
-
-    public CombinationResolver(CombinationTable table)
+    public CombinationResolver()
     {
-        if (table == null)
-        {
-            throw new ArgumentNullException(nameof(table));
-        }
+        this._table = Resources.Load<CombinationTable>("DefaultCombinationTable");
 
-        this._table = table;
+        if (this._table == null)
+        {
+            throw new InvalidOperationException("Resources/DefaultCombinationTable.asset을 찾을 수 없습니다.");
+        }
     }
 
     // slot에서 호출할 api 
