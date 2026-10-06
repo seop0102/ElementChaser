@@ -1,6 +1,7 @@
 using Mirror;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class PlayerLook : NetworkBehaviour
 {
@@ -26,8 +27,8 @@ public class PlayerLook : NetworkBehaviour
         if (audioListener != null)
             audioListener.enabled = true;
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     public override void OnStartClient()
@@ -46,6 +47,15 @@ public class PlayerLook : NetworkBehaviour
         if (!isLocalPlayer)
             return;
 
+        if (SceneManager.GetActiveScene().name != "GameScene")
+            return;
+        
+        if (Cursor.lockState != CursorLockMode.Locked)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+        
         if (Mouse.current == null)
             return;
 
