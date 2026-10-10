@@ -12,39 +12,73 @@ public class PlayerLook : NetworkBehaviour
     private AudioListener audioListener;
     private float xRotation = 0f;
 
+    private bool isGameScene = false;
+
     void Awake()
     {
         playerBody = transform.parent;
-
         playerCamera = GetComponent<Camera>();
         audioListener = GetComponent<AudioListener>();
+
+        // 네트워크 플레이어가 활성화되기 전에는 카메라 비활성화
+        playerCamera.enabled = false;
+
+        if (audioListener != null)
+            audioListener.enabled = false;
     }
 
     public override void OnStartLocalPlayer()
     {
-        playerCamera.enabled = true;
-
-        if (audioListener != null)
-            audioListener.enabled = true;
-
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        UpdateCameraState();
     }
 
     public override void OnStartClient()
     {
-        if (!isLocalPlayer)
-        {
-            playerCamera.enabled = false;
+        UpdateCameraState();
+    }
 
-            if (audioListener != null)
-                audioListener.enabled = false;
+    void OnEnable()
+    {
+        SceneManager.activeSceneChanged += OnSceneChanged;
+    }
+
+    void OnDisable()
+    {
+        SceneManager.activeSceneChanged -= OnSceneChanged;
+    }
+
+    void OnSceneChanged(Scene oldScene, Scene newScene)
+    {
+        UpdateCameraState();
+    }
+
+    void UpdateCameraState()
+    {
+        isGameScene =
+            SceneManager.GetActiveScene().name == "GameScene";
+
+        bool enableFPS = isLocalPlayer && isGameScene;
+
+        if (playerCamera != null)
+            playerCamera.enabled = enableFPS;
+
+        if (audioListener != null)
+            audioListener.enabled = enableFPS;
+
+        // 커서는 로컬 플레이어만 제어
+        if (isLocalPlayer)
+        {
+            Cursor.lockState = enableFPS
+                ? CursorLockMode.Locked
+                : CursorLockMode.None;
+
+            Cursor.visible = !enableFPS;
         }
     }
 
     void Update()
     {
-        if (!isLocalPlayer)
+        if (!isLocalPlayer || !isGameScene)
             return;
 
         if (SceneManager.GetActiveScene().name != "GameScene")
