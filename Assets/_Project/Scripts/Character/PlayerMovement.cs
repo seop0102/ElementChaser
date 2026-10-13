@@ -14,6 +14,7 @@ public class PlayerMovement : NetworkBehaviour
 
     private bool isGameScene;
     private bool spawnReady;
+    private bool spawnAcknowledged;
 
     void Awake()
     {
@@ -34,11 +35,11 @@ public class PlayerMovement : NetworkBehaviour
     {
         isGameScene = newScene.name == "GameScene";
         spawnReady = false;
-
-        if (isGameScene && isServer)
-            StartCoroutine(MoveToSpawnPoint());
+        spawnAcknowledged = false;
+        /*if (isGameScene && isServer)
+            StartCoroutine(MoveToSpawnPoint());*/
     }
-
+    /*
     public override void OnStartServer()
     {
         if (SceneManager.GetActiveScene().name == "GameScene")
@@ -85,7 +86,65 @@ public class PlayerMovement : NetworkBehaviour
 
         Debug.Log($"SpawnPoint04로 이동 완료: {transform.position}");
     }
+    */
+    [Server]
+    public void SetSpawnPosition(Vector3 position, Quaternion rotation)
+    {
+        controller.enabled = false;
 
+        transform.SetPositionAndRotation(position, rotation);
+        verticalVelocity = 0f;
+
+        controller.enabled = true;
+        spawnReady = true;
+
+        if (connectionToClient != null)
+        {
+            TargetSetSpawnPosition(
+                connectionToClient,
+                position,
+                rotation
+            );
+        }
+
+        Debug.Log($"[Spawn] {netId} → {position}");
+    }
+    [TargetRpc]
+    private void TargetSetSpawnPosition(
+        NetworkConnectionToClient target,
+        Vector3 position,
+        Quaternion rotation)
+    {
+        controller.enabled = false;
+
+        transform.SetPositionAndRotation(position, rotation);
+        verticalVelocity = 0f;
+
+        controller.enabled = true;
+        spawnReady = true;
+
+        Debug.Log($"[Spawn] 클라이언트 스폰 적용 완료: {netId}");
+
+        if (!spawnAcknowledged)
+        {
+            spawnAcknowledged = true;
+            CmdConfirmSpawn();
+        }
+    }
+    [Command]
+    private void CmdConfirmSpawn()
+    {
+        if (connectionToClient == null)
+            return;
+
+        ElementNetworkManager manager =
+            NetworkManager.singleton as ElementNetworkManager;
+
+        if (manager == null)
+            return;
+
+        manager.ConfirmPlayerSpawn(netId);
+    }
     [ClientRpc]
     private void RpcSetSpawnPosition(Vector3 position, Quaternion rotation)
     {
@@ -110,7 +169,10 @@ public class PlayerMovement : NetworkBehaviour
 
         if (!isLocalPlayer || !isGameScene || !spawnReady)
             return;
-
+        // Playing 상태일때만 이동 가능
+        if (GameStateManager.Instance == null ||
+            GameStateManager.Instance.CurrentPhase != GamePhase.Playing)
+            return;
         Vector2 input = Vector2.zero;
 
         if (Keyboard.current != null)
