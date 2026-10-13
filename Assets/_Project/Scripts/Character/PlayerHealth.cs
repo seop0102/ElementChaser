@@ -4,15 +4,17 @@ using UnityEngine;
 
 public class PlayerHealth : NetworkBehaviour
 {
-    [SerializeField] private int maxHealth = 100;
+    [SerializeField] private int maxHealth = 4; //체력 4칸으로 변경
 
     [SyncVar(hook = nameof(OnHealthChanged))]
     private int currentHealth;
 
     public int CurrentHealth => currentHealth;
-
+    public int MaxHealth => maxHealth;
+    
     public override void OnStartServer()
     {
+        base.OnStartServer();
         currentHealth = maxHealth;
     }
 
