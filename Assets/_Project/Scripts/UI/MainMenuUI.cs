@@ -12,6 +12,17 @@ public class MainMenuUI : MonoBehaviour
     {
         ShowMainMenu();
     }
+    
+    public void OnClickCreateRoom()
+    {
+        if (SteamLobbyManager.Instance == null)
+        {
+            Debug.LogError("[MainMenuUI] SteamLobbyManager 없음");
+            return;
+        }
+
+        SteamLobbyManager.Instance.CreateLobby();
+    }
 
     public void ShowMainMenu()
     {
