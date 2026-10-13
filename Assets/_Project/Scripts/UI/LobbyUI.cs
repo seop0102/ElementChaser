@@ -13,6 +13,21 @@ public class LobbyUI : MonoBehaviour
     [SerializeField] private Button _startGameButton;
     [SerializeField] private TMP_Text _backButtonText;
 
+    public void OnClickStartGame()
+    {
+        Debug.Log("[LobbyUI] START 버튼 클릭!");
+
+        ElementNetworkManager manager =
+            NetworkManager.singleton as ElementNetworkManager;
+
+        if (manager == null)
+        {
+            Debug.LogError("[LobbyUI] ElementNetworkManager 없음!");
+            return;
+        }
+
+        manager.StartGame();
+    }
     public void RefreshLobby()
     {
         NetworkPlayer[] players = FindObjectsByType<NetworkPlayer>();
@@ -54,4 +69,25 @@ public class LobbyUI : MonoBehaviour
 
         _backButtonText.text = isHost ? "Close Room" : "Leave Room";
     }
+    private void Awake()
+    {
+        if (_startGameButton == null)
+        {
+            Debug.LogError("[LobbyUI] StartGameButton 연결 안 됨!");
+            return;
+        }
+
+        // 기존 Inspector 이벤트 제거 후 현재 LobbyUI에 연결
+        _startGameButton.onClick.RemoveAllListeners();
+        _startGameButton.onClick.AddListener(OnClickStartGame);
+
+        Debug.Log("[LobbyUI] START 버튼 연결 완료");
+    }
+    
+    public void OnClickBack()
+    {
+        if (SteamLobbyManager.Instance != null)
+            SteamLobbyManager.Instance.LeaveLobby();
+    }
+
 }
