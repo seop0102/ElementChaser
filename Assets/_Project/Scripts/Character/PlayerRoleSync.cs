@@ -12,6 +12,22 @@ public class PlayerRoleSync : NetworkBehaviour
     public bool IsChaser => role == PlayerRole.Chaser;
     public bool IsRunner => role == PlayerRole.Runner;
 
+    [SyncVar(hook = nameof(OnJailChanged))]
+    private bool isJailed = false;
+
+    public bool IsJailed => isJailed;
+
+    [Server]
+    public void SetJailed(bool jailed)
+    {
+        isJailed = jailed;
+    }
+
+    private void OnJailChanged(bool oldValue, bool newValue)
+    {
+        Debug.Log($"[감옥 상태 변경] {gameObject.name}: {newValue}");
+    }
+    
     [Server]
     public void SetRole(PlayerRole newRole)
     {

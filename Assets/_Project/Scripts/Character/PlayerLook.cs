@@ -68,28 +68,54 @@ public class PlayerLook : NetworkBehaviour
         // 커서는 로컬 플레이어만 제어
         if (isLocalPlayer)
         {
-            Cursor.lockState = enableFPS
+            // 게임 종료 시에는 커서를 표시
+            bool shouldLock =
+                enableFPS &&
+                GameStateManager.Instance != null &&
+                GameStateManager.Instance.CurrentPhase != GamePhase.Finished;
+
+            Cursor.lockState = shouldLock
                 ? CursorLockMode.Locked
                 : CursorLockMode.None;
 
-            Cursor.visible = !enableFPS;
+            Cursor.visible = !shouldLock;
         }
     }
 
     void Update()
     {
-        if (!isLocalPlayer || !isGameScene)
+        if (!isLocalPlayer)
             return;
 
         if (SceneManager.GetActiveScene().name != "GameScene")
             return;
-        
+
+        GameStateManager gameState = GameStateManager.Instance;
+
+        if (gameState == null)
+            return;
+
+        // 게임 종료 시 마우스 잠금 해제 및 카메라 회전 중지
+        if (gameState.CurrentPhase == GamePhase.Finished)
+        {
+            if (Cursor.lockState != CursorLockMode.None)
+                Cursor.lockState = CursorLockMode.None;
+
+            Cursor.visible = true;
+            return;
+        }
+
+        // 게임 진행 중에만 카메라 회전 허용
+        if (gameState.CurrentPhase != GamePhase.Playing)
+            return;
+
+        // FPS 마우스 잠금
         if (Cursor.lockState != CursorLockMode.Locked)
         {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
         }
-        
+
         if (Mouse.current == null)
             return;
 
@@ -101,7 +127,9 @@ public class PlayerLook : NetworkBehaviour
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
 
-        transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        transform.localRotation =
+            Quaternion.Euler(xRotation, 0f, 0f);
+
         playerBody.Rotate(Vector3.up * mouseX);
     }
 }
