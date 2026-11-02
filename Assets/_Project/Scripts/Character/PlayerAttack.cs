@@ -23,6 +23,8 @@ public class PlayerAttack : NetworkBehaviour
 
     void Update()
     {
+        if (playerRole == null || !playerRole.IsChaser)
+            return;
         if (!isLocalPlayer)
             return;
 
@@ -33,12 +35,19 @@ public class PlayerAttack : NetworkBehaviour
             !Mouse.current.leftButton.wasPressedThisFrame)
             return;
 
+        if (GameStateManager.Instance == null ||
+            GameStateManager.Instance.CurrentPhase != GamePhase.Playing)
+            return;
+
         CmdAttack();
     }
 
     [Command]
     private void CmdAttack()
     {
+        if (GameStateManager.Instance == null ||
+            GameStateManager.Instance.CurrentPhase != GamePhase.Playing)
+            return;
         if (playerRole == null || !playerRole.IsChaser)
             return;
         // 쿨타임은 서버에서 검사
@@ -61,15 +70,21 @@ public class PlayerAttack : NetworkBehaviour
                 hit.collider.GetComponentInParent<PlayerHealth>();
 
             if (target != null && target != GetComponent<PlayerHealth>())
-            {
-                target.TakeDamage(attackDamage);
+                {
+                    PlayerRoleSync targetRole =
+                        target.GetComponent<PlayerRoleSync>();
 
-                Debug.Log(
-                    $"[공격 성공] {name} → {target.name}, 데미지 {attackDamage}"
-                );
+                    if (targetRole == null || !targetRole.IsRunner)
+                        return;
 
-                return;
-            }
+                    target.TakeDamage(attackDamage);
+
+                    Debug.Log(
+                        $"[공격 성공] {name} → {target.name}, 데미지 {attackDamage}"
+                    );
+
+                    return;
+                }
         }
 
         Debug.Log($"[공격 실패] {name}: 사거리 내 대상 없음");
