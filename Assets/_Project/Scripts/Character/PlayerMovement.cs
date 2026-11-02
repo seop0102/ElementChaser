@@ -11,6 +11,8 @@ public class PlayerMovement : NetworkBehaviour
 
     private CharacterController controller;
     private float verticalVelocity;
+    private Animator animator;
+    private PlayerAnimationSync animationSync;
 
     private bool isGameScene;
     private bool spawnReady;
@@ -19,6 +21,8 @@ public class PlayerMovement : NetworkBehaviour
     void Awake()
     {
         controller = GetComponent<CharacterController>();
+        animator = GetComponentInChildren<Animator>();
+        animationSync = GetComponent<PlayerAnimationSync>();
     }
 
     void OnEnable()
@@ -188,6 +192,15 @@ public class PlayerMovement : NetworkBehaviour
             transform.forward * input.y;
 
         direction.Normalize();
+
+        if (animator != null)
+        {
+            animator.SetFloat("Speed", direction.magnitude);
+        }
+        if (animationSync != null)
+        {
+            animationSync.SetMoving(direction.sqrMagnitude > 0.01f);
+        }
 
         if(controller.isGrounded && verticalVelocity < 0f)
     verticalVelocity = -2f;
