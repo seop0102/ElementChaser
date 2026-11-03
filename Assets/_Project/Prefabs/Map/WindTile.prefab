@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4669595470581020798}
   - component: {fileID: 8871759230020718542}
   - component: {fileID: 3556974142482860544}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: WindTile
   m_TagString: Untagged
   m_Icon: {fileID: 0}
