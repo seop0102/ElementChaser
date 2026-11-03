@@ -922,6 +922,9 @@ GameObject:
   - component: {fileID: -357022022834773702}
   - component: {fileID: 3336011701797428427}
   - component: {fileID: 2269344917695229812}
+  - component: {fileID: 743860551114831500}
+  - component: {fileID: 2160558588739357744}
+  - component: {fileID: 6438702069790975274}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1196,6 +1199,65 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerVisual
   characterRenderer: {fileID: 2889409915981267354}
+--- !u!114 &743860551114831500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7007396128862476477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bb25a9bc4c4fae4692125a64b192d9c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInventory
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  smokeCount: 0
+  invisibilityCount: 0
+  vineWallCount: 0
+  waterWallCount: 0
+  fireWallCount: 0
+  bombCount: 0
+  waterPoints: 0
+  firePoints: 0
+  grassPoints: 0
+  windPoints: 0
+--- !u!114 &2160558588739357744
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7007396128862476477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2275d4946451a48489e74414b8d8f74b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InventoryTest
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+--- !u!114 &6438702069790975274
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7007396128862476477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a553fd01e2a462045aa26a6d8ce0ea66, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerTileController
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  tileLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  rayDistance: 3
 --- !u!1 &7728028454824038608
 GameObject:
   m_ObjectHideFlags: 0
