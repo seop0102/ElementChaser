@@ -1,11 +1,10 @@
 using UnityEngine;
 
-// 연막 경로 예측, 실제 투척이 함께 사용하는 설정
-// 설정, 경로, 효과
+// 경로 예측과 실제 투척이 함께 사용하는 공통 설정
 [CreateAssetMenu(
-    fileName = "SmokeThrowSettings",
-    menuName = "ElementChaser/Item/Smoke Throw Settings")]
-public class SmokeThrowSettings : ScriptableObject
+    fileName = "ThrowableSettings",
+    menuName = "ElementChaser/Item/Throwing/Throwable Settings")]
+public class ThrowableSettings : ScriptableObject
 {
     [Header("투척 설정 — 임시값")]
 
@@ -34,15 +33,4 @@ public class SmokeThrowSettings : ScriptableObject
     [Tooltip("착지를 탐색할 최대 비행시간")]
     [Min(0.1f)]
     public float MaxFlightTime = 10f;
-
-    //=================================================
-    [Header("연막 효과 — 임시값")]
-
-    [Tooltip("연막과 바닥 미리보기 반지름")]
-    [Min(0.01f)]
-    public float SmokeRadius = 3f;
-
-    [Tooltip("착지 후 연막 지속시간")]
-    [Min(0.1f)]
-    public float SmokeDuration = 10f;
 }

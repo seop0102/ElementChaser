@@ -2,15 +2,15 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 연막 경로 예측 결과를 담을 클래스
-public sealed class SmokeTrajectoryResult
+// 공통 투척 경로 예측 결과
+public sealed class TrajectoryResult
 {
     public IReadOnlyList<Vector3> Points { get; }
     public bool HasLanded { get; }
     public Vector3 LandingPoint { get; }
     public Vector3 LandingNormal { get; }
 
-    public SmokeTrajectoryResult(
+    public TrajectoryResult(
         List<Vector3> points,   //투척 경로(점선)
         bool hasLanded,         //바닥 윗면 착지 여부
         Vector3 landingPoint,   //바닥 접촉 위치
