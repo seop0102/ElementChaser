@@ -1,24 +1,24 @@
 using System;
 using UnityEngine;
 
-public enum SmokeSimulationStatus
+public enum ThrowableSimulationStatus
 {
     Flying,
     Landed,
     Blocked
 }
 
-// 연막 투척의 한 단계 이동 계산
-public static class SmokeThrowSimulation
+// 공통 투척의 한 단계 이동 계산
+public static class ThrowableSimulation
 {
     private const float SurfaceOffset = 0.001f;
     private const int MaxCollisionsPerStep = 8;
 
-    public static SmokeSimulationStatus SimulateStep(
+    public static ThrowableSimulationStatus SimulateStep(
         ref Vector3 position,
         ref Vector3 velocity,
         float deltaTime,
-        SmokeThrowSettings settings,
+        ThrowableSettings settings,
         LayerMask collisionMask,
         Func<RaycastHit, bool> isLandingSurface,
         out RaycastHit landingHit)
@@ -57,7 +57,7 @@ public static class SmokeThrowSimulation
             collisionMask,
             QueryTriggerInteraction.Ignore))
         {
-            return SmokeSimulationStatus.Blocked;
+            return ThrowableSimulationStatus.Blocked;
         }
 
         velocity += settings.Gravity * deltaTime;
@@ -70,7 +70,7 @@ public static class SmokeThrowSimulation
 
             if (speed <= 0.0001f)
             {
-                return SmokeSimulationStatus.Flying;
+                return ThrowableSimulationStatus.Flying;
             }
 
             Vector3 direction = velocity / speed;
@@ -88,7 +88,7 @@ public static class SmokeThrowSimulation
             if (!hasHit)
             {
                 position += direction * distance;
-                return SmokeSimulationStatus.Flying;
+                return ThrowableSimulationStatus.Flying;
             }
 
             // 충돌 직전 중심 위치
@@ -101,7 +101,7 @@ public static class SmokeThrowSimulation
                 velocity = Vector3.zero;
                 landingHit = hit;
 
-                return SmokeSimulationStatus.Landed;
+                return ThrowableSimulationStatus.Landed;
             }
 
             remainingTime = Mathf.Max(
@@ -114,11 +114,11 @@ public static class SmokeThrowSimulation
 
             if (remainingTime <= 0.000001f)
             {
-                return SmokeSimulationStatus.Flying;
+                return ThrowableSimulationStatus.Flying;
             }
         }
 
         // 좁은 틈 등에서 반복 충돌 시 계산 중단
-        return SmokeSimulationStatus.Blocked;
+        return ThrowableSimulationStatus.Blocked;
     }
 }
