@@ -15,6 +15,7 @@ public class ElementNetworkManager : NetworkManager
     private readonly HashSet<uint> spawnedPlayers = new HashSet<uint>();
     
     private bool spawnStarted = false;
+    private bool returningToLobby = false;
 
     public void StartGame()
     {
@@ -37,7 +38,8 @@ public class ElementNetworkManager : NetworkManager
             );
             return;
         }
-        
+        returningToLobby = false;
+        SteamLobbyManager.Instance?.ClearReturnToLobby();
         loadedPlayers.Clear();
         spawnedPlayers.Clear();
         spawnStarted = false;
@@ -208,15 +210,67 @@ public class ElementNetworkManager : NetworkManager
     
     public override void OnClientDisconnect()
     {
+        bool wasHost = NetworkServer.active;
+
         base.OnClientDisconnect();
 
-        // 호스트 종료로 연결이 끊긴 클라이언트도
-        // Steam 로비에서 정상 퇴장
-        if (!NetworkServer.active &&
-            SteamLobbyManager.Instance != null)
-        {
-            SteamLobbyManager.Instance.HandleDisconnected();
-        }
+        if (wasHost)
+            return;
+
+        Debug.Log("[Network] 호스트 연결 종료 감지");
+
+        SteamLobbyManager.Instance?.HandleDisconnected();
+    }
+    public override void OnStopServer()
+    {
+        loadedPlayers.Clear();
+        spawnedPlayers.Clear();
+        spawnStarted = false;
+        returningToLobby = false;
+        base.OnStopServer();
+
+        Debug.Log("[Network] 서버 종료 및 스폰 상태 초기화");
+    }
+    public override void OnServerDisconnect(
+        NetworkConnectionToClient conn)
+    {
+        bool wasInGame =
+            SceneManager.GetActiveScene().name == "GameScene";
+
+        bool shouldReturn =
+            wasInGame && !returningToLobby;
+
+        // 먼저 퇴장한 플레이어를 네트워크에서 제거
+        base.OnServerDisconnect(conn);
+
+        if (!shouldReturn)
+            return;
+
+        returningToLobby = true;
+
+        Debug.Log("[Network] 게임 중 클라이언트 퇴장 감지");
+
+        // 남은 플레이어들에게 게임 중단 알림
+        GameStateManager.Instance?.InterruptGame();
+
+        StartCoroutine(ReturnToLobbyRoutine());
     }
 
+    [Server]
+    private IEnumerator ReturnToLobbyRoutine()
+    {
+        // 알림을 3초 동안 표시
+        yield return new WaitForSecondsRealtime(3f);
+
+        if (!NetworkServer.active)
+            yield break;
+
+        Debug.Log("[Network] 남은 플레이어 로비 복귀");
+
+        // 로비 복귀 상태 설정
+        SteamLobbyManager.Instance?.PrepareReturnToLobby();
+
+        // 서버를 종료하지 않고 씬만 이동
+        ServerChangeScene("MainMenu");
+    }
 }

@@ -43,7 +43,8 @@ public class GameStateManager : NetworkBehaviour
 
     // 게임 시작 중복 실행 방지
     private bool isStarting = false;
-
+    private bool isInterrupted = false;
+    
     // UI에서 사용할 공개 속성
     public GamePhase CurrentPhase => currentPhase;
     public uint ChaserNetId => chaserNetId;
@@ -78,7 +79,8 @@ public class GameStateManager : NetworkBehaviour
         countdown = 3;
         gameEndTime = 0;
         isStarting = false;
-
+        isInterrupted = false;
+        
         Debug.Log("[GameState] 플레이어 준비 대기");
     }
 
@@ -144,6 +146,8 @@ public class GameStateManager : NetworkBehaviour
 
         for (int i = 3; i >= 1; i--)
         {
+            if (isInterrupted)
+                yield break;
             countdown = i;
 
             Debug.Log(
@@ -152,7 +156,8 @@ public class GameStateManager : NetworkBehaviour
 
             yield return new WaitForSeconds(1f);
         }
-
+        if (isInterrupted)
+            yield break;
         countdown = 0;
 
         // 서버 시간을 기준으로 게임 종료 시각 설정
@@ -170,7 +175,7 @@ public class GameStateManager : NetworkBehaviour
     [ServerCallback]
     private void Update()
     {
-        if (currentPhase != GamePhase.Playing)
+        if (isInterrupted || currentPhase != GamePhase.Playing)
             return;
 
         // 1. 제한 시간 종료
@@ -305,5 +310,42 @@ public class GameStateManager : NetworkBehaviour
         Debug.Log(
             $"[GameState] 게임 종료! 승리자: {winnerNames}"
         );
+    }
+    
+    [Server]
+    public void InterruptGame()
+    {
+        if (isInterrupted)
+            return;
+
+        isInterrupted = true;
+        isStarting = false;
+
+        // 게임 타이머 및 승패 판정 중단
+        currentPhase = GamePhase.Waiting;
+        gameEndTime = 0;
+
+        // 진행 중인 게임 시작 카운트다운 중단
+        StopAllCoroutines();
+
+        Debug.Log("[GameState] 플레이어 이탈로 게임 중단");
+
+        RpcShowDisconnectNotice();
+    }
+
+    [ClientRpc]
+    private void RpcShowDisconnectNotice()
+    {
+        GameReturnNotice notice =
+            FindFirstObjectByType<GameReturnNotice>();
+
+        if (notice != null)
+        {
+            notice.ShowNotice();
+        }
+        else
+        {
+            Debug.LogWarning("[GameState] GameReturnNotice 없음");
+        }
     }
 }
