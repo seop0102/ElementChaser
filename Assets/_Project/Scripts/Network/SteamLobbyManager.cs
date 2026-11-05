@@ -3,6 +3,7 @@ using Mirror;
 using Steamworks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class SteamLobbyManager : MonoBehaviour
 {
@@ -19,7 +20,20 @@ public class SteamLobbyManager : MonoBehaviour
     private Callback<GameLobbyJoinRequested_t> _gameLobbyJoinRequested;
 
     private CSteamID _currentLobbyId;
+    private bool _returningToLobby = false;
 
+    public bool ShouldShowLobby =>
+        _returningToLobby || NetworkClient.active;
+
+    public void PrepareReturnToLobby()
+    {
+        _returningToLobby = true;
+    }
+
+    public void ClearReturnToLobby()
+    {
+        _returningToLobby = false;
+    }
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -76,8 +90,16 @@ public class SteamLobbyManager : MonoBehaviour
             return;
         }
 
-        _mainMenuUI.ShowMainMenu();
-        _mainMenuUI.SetCreateRoomInteractable(true);
+        if (ShouldShowLobby)
+        {
+            _mainMenuUI.ShowLobby();
+            StartCoroutine(RefreshReturnedLobby());
+        }
+        else
+        {
+            _mainMenuUI.ShowMainMenu();
+            _mainMenuUI.SetCreateRoomInteractable(true);
+        }
 
         Debug.Log("[SteamLobby] MainMenu UI 재연결 완료");
     }
@@ -158,34 +180,50 @@ public class SteamLobbyManager : MonoBehaviour
 
     private void OnLobbyEntered(LobbyEnter_t callback)
     {
-        _currentLobbyId =
-            new CSteamID(callback.m_ulSteamIDLobby);
+        _currentLobbyId = new CSteamID(callback.m_ulSteamIDLobby);
 
+        // 자신이 방을 만든 호스트라면 클라이언트로 접속하지 않음
         if (NetworkServer.active)
             return;
 
-        string hostAddress =
-            SteamMatchmaking.GetLobbyData(
-                _currentLobbyId,
-                HostAddressKey
-            );
+        // 종료된 방이면 입장 취소
+        if (SteamMatchmaking.GetLobbyData(
+                _currentLobbyId, "RoomClosed") == "1")
+        {
+            Debug.LogWarning("[SteamLobby] 종료된 방입니다.");
+            ClearSteamLobby();
+            ShowMainMenuIfLoaded();
+            return;
+        }
+
+        string hostAddress = SteamMatchmaking.GetLobbyData(
+            _currentLobbyId, HostAddressKey);
 
         if (string.IsNullOrWhiteSpace(hostAddress))
         {
             Debug.LogError("[SteamLobby] 호스트 주소 없음");
+            ClearSteamLobby();
+            ShowMainMenuIfLoaded();
             return;
         }
 
-        NetworkManager.singleton.networkAddress =
-            hostAddress;
+        // Steam 로비 소유권이 원래 호스트와 다르면 종료
+        string lobbyOwner = SteamMatchmaking.GetLobbyOwner(
+            _currentLobbyId).ToString();
 
+        if (lobbyOwner != hostAddress)
+        {
+            Debug.LogWarning("[SteamLobby] 원래 호스트가 없는 방입니다.");
+            ClearSteamLobby();
+            ShowMainMenuIfLoaded();
+            return;
+        }
+
+        NetworkManager.singleton.networkAddress = hostAddress;
         NetworkManager.singleton.StartClient();
 
-        if (_mainMenuUI != null)
-            _mainMenuUI.ShowLobby();
-
-        if (_lobbyUI != null)
-            _lobbyUI.RefreshLobby();
+        _mainMenuUI?.ShowLobby();
+        _lobbyUI?.RefreshLobby();
     }
 
     private void OnGameLobbyJoinRequested(
@@ -210,39 +248,71 @@ public class SteamLobbyManager : MonoBehaviour
 
     public void LeaveLobby()
     {
+        _returningToLobby = false;
         Debug.Log("[SteamLobby] 나가기 요청");
+
+       
+        bool isHost = NetworkServer.active;
+
+        if (isHost && _currentLobbyId.IsValid())
+        {
+            // 호스트 종료 시 신규 참가 차단
+            SteamMatchmaking.SetLobbyData(
+                _currentLobbyId, "RoomClosed", "1");
+
+            SteamMatchmaking.SetLobbyJoinable(
+                _currentLobbyId, false);
+        }
 
         ClearSteamLobby();
 
-        if (NetworkServer.active)
+        if (isHost)
         {
-            // 호스트가 종료하면 모든 클라이언트 연결 해제
             NetworkManager.singleton.StopHost();
-            Debug.Log("[SteamLobby] 호스트 종료");
         }
         else if (NetworkClient.active)
         {
-            // 클라이언트는 본인만 연결 종료
             NetworkManager.singleton.StopClient();
-            Debug.Log("[SteamLobby] 클라이언트 퇴장");
         }
-        else if (SceneManager.GetActiveScene().name == "MainMenu")
-        {
-            _mainMenuUI?.ShowMainMenu();
-            _mainMenuUI?.SetCreateRoomInteractable(true);
-        }
-    }
 
-    // 호스트 종료 등으로 강제로 연결이 끊긴 클라이언트용
+        ShowMainMenuIfLoaded();
+    }
     public void HandleDisconnected()
     {
+        _returningToLobby = false;
+        Debug.Log("[SteamLobby] 호스트 연결 종료, 로비 초기화");
+
         ClearSteamLobby();
-        Debug.Log("[SteamLobby] 연결 종료 후 로비 정리");
+        ShowMainMenuIfLoaded();
+    }
+
+    private void ShowMainMenuIfLoaded()
+    {
+        if (SceneManager.GetActiveScene().name != "MainMenu")
+            return;
+
+        _mainMenuUI = FindFirstObjectByType<MainMenuUI>();
+
+        if (_mainMenuUI != null)
+        {
+            _mainMenuUI.ShowMainMenu();
+            _mainMenuUI.SetCreateRoomInteractable(true);
+        }
     }
 
     private void OnDestroy()
     {
         if (Instance == this)
             Instance = null;
+    }
+    private IEnumerator RefreshReturnedLobby()
+    {
+        // 씬 전환 직후 네트워크 오브젝트 준비 대기
+        yield return null;
+
+        if (NetworkClient.active)
+        {
+            _lobbyUI?.RefreshLobby();
+        }
     }
 }

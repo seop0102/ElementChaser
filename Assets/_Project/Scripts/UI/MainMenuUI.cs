@@ -10,7 +10,15 @@ public class MainMenuUI : MonoBehaviour
 
     private void Start()
     {
-        ShowMainMenu();
+        if (SteamLobbyManager.Instance != null &&
+            SteamLobbyManager.Instance.ShouldShowLobby)
+        {
+            ShowLobby();
+        }
+        else
+        {
+            ShowMainMenu();
+        }
     }
     
     public void OnClickCreateRoom()
