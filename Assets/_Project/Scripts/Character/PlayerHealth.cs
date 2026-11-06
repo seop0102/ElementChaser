@@ -4,20 +4,19 @@ using UnityEngine;
 
 public class PlayerHealth : NetworkBehaviour
 {
-    [SerializeField] private int maxHealth = 4; //체력 4칸으로 변경
+    [SerializeField] private int maxHealth = 4;
 
     [SyncVar(hook = nameof(OnHealthChanged))]
     private int currentHealth;
 
     public int CurrentHealth => currentHealth;
     public int MaxHealth => maxHealth;
-    
+
     public override void OnStartServer()
     {
         base.OnStartServer();
         currentHealth = maxHealth;
     }
-
 
     [Server]
     public void TakeDamage(int damage)
@@ -37,13 +36,40 @@ public class PlayerHealth : NetworkBehaviour
         {
             Debug.Log($"[체력 0] {gameObject.name} 쓰러짐!");
         }
-    }
 
+        RpcPlayHitAnimation();
+
+        // 피격된 플레이어의 화면만 흔들기
+        TargetShakeCamera(connectionToClient);
+    }
 
     private void OnHealthChanged(int oldHealth, int newHealth)
     {
-        Debug.Log(
-            $"체력 동기화: {oldHealth} → {newHealth}"
-        );
+        Debug.Log($"체력 동기화: {oldHealth} → {newHealth}");
+    }
+
+    [ClientRpc]
+    private void RpcPlayHitAnimation()
+    {
+        PlayerAnimationSync animationSync =
+            GetComponent<PlayerAnimationSync>();
+
+        if (animationSync != null)
+        {
+            animationSync.PlayHitAnimation();
+        }
+    }
+
+    [TargetRpc]
+    private void TargetShakeCamera(
+        NetworkConnectionToClient target)
+    {
+        PlayerCameraShake cameraShake =
+            GetComponentInChildren<PlayerCameraShake>(true);
+
+        if (cameraShake != null)
+        {
+            cameraShake.Shake();
+        }
     }
 }
