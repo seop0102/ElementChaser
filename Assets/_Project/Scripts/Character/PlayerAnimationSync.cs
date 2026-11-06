@@ -12,7 +12,13 @@ public class PlayerAnimationSync : NetworkBehaviour
 
     private void Awake()
     {
-        animator = GetComponentInChildren<Animator>();
+        animator = GetComponentInChildren<Animator>(true);
+    }
+
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+        ApplyAnimation(isMoving);
     }
 
     public void SetMoving(bool moving)
@@ -24,6 +30,11 @@ public class PlayerAnimationSync : NetworkBehaviour
             return;
 
         lastSentMoving = moving;
+
+        // 로컬에서는 즉시 이동 애니메이션 적용
+        ApplyAnimation(moving);
+
+        // 다른 클라이언트에도 이동 상태 동기화
         CmdSetMoving(moving);
     }
 
@@ -46,9 +57,20 @@ public class PlayerAnimationSync : NetworkBehaviour
         animator.SetFloat("Speed", moving ? 1f : 0f);
     }
 
-    public override void OnStartClient()
+    // PlayerAttack, Hit
+    public void PlayAttackAnimation()
     {
-        base.OnStartClient();
-        ApplyAnimation(isMoving);
+        if (animator == null)
+            return;
+
+        animator.SetTrigger("Attack");
     }
+    public void PlayHitAnimation()
+    {
+        if (animator == null)
+            return;
+
+        animator.SetTrigger("Hit");
+    }
+
 }
