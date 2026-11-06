@@ -1406,14 +1406,12 @@ GameObject:
   - component: {fileID: 3336011701797428427}
   - component: {fileID: 2269344917695229812}
   - component: {fileID: 5126496582203235126}
-<<<<<<< Updated upstream
+  - component: {fileID: 8142915529698129692}
+  - component: {fileID: 2954264140313032718}
   - component: {fileID: 743860551114831500}
   - component: {fileID: 2160558588739357744}
   - component: {fileID: 6438702069790975274}
-=======
-  - component: {fileID: 8142915529698129692}
-  - component: {fileID: 2954264140313032718}
->>>>>>> Stashed changes
+  - component: {fileID: 588904369649141876}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1704,12 +1702,7 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-<<<<<<< Updated upstream
-
---- !u!114 &743860551114831500
-=======
 --- !u!114 &8142915529698129692
->>>>>>> Stashed changes
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1718,26 +1711,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 7007396128862476477}
   m_Enabled: 1
   m_EditorHideFlags: 0
-<<<<<<< Updated upstream
-  m_Script: {fileID: 11500000, guid: 6bb25a9bc4c4fae4692125a64b192d9c, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerInventory
-  syncDirection: 0
-  syncMode: 0
-  syncInterval: 0
-  smokeCount: 0
-  invisibilityCount: 0
-  vineWallCount: 0
-  waterWallCount: 0
-  fireWallCount: 0
-  bombCount: 0
-  waterPoints: 0
-  firePoints: 0
-  grassPoints: 0
-  windPoints: 0
-
---- !u!114 &2160558588739357744
-=======
   m_Script: {fileID: 11500000, guid: 522ad5f206282ce40a13782b59395b5b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHammer
@@ -1745,7 +1718,6 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0
 --- !u!114 &2954264140313032718
->>>>>>> Stashed changes
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1754,16 +1726,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 7007396128862476477}
   m_Enabled: 1
   m_EditorHideFlags: 0
-<<<<<<< Updated upstream
-  m_Script: {fileID: 11500000, guid: 2275d4946451a48489e74414b8d8f74b, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::InventoryTest
-  syncDirection: 0
-  syncMode: 0
-  syncInterval: 0
-
---- !u!114 &6438702069790975274
-=======
   m_Script: {fileID: 11500000, guid: f005f9ac8cc642b4092f74c96c1bf7c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SteamNameTag
@@ -1892,13 +1854,64 @@ SkinnedMeshRenderer:
     m_Extent: {x: 0.005304532, y: 0.0058413236, z: 0.0019703598}
   m_DirtyAABB: 0
 --- !u!114 &2451085919717551416
->>>>>>> Stashed changes
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-<<<<<<< Updated upstream
+  m_GameObject: {fileID: 7081482911517571264}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44b4656e16b76cb48a22d78f84d40dde, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::SteamAvatarFace
+  faceRenderer: {fileID: 0}
+--- !u!114 &743860551114831500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7007396128862476477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bb25a9bc4c4fae4692125a64b192d9c, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInventory
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  smokeCount: 0
+  invisibilityCount: 0
+  vineWallCount: 0
+  waterWallCount: 0
+  fireWallCount: 0
+  bombCount: 0
+  waterPoints: 0
+  firePoints: 0
+  grassPoints: 0
+  windPoints: 0
+--- !u!114 &2160558588739357744
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7007396128862476477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2275d4946451a48489e74414b8d8f74b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::InventoryTest
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+--- !u!114 &6438702069790975274
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7007396128862476477}
   m_Enabled: 1
   m_EditorHideFlags: 0
@@ -1912,15 +1925,23 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   rayDistance: 3
-=======
-  m_GameObject: {fileID: 7081482911517571264}
+--- !u!114 &588904369649141876
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7007396128862476477}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 44b4656e16b76cb48a22d78f84d40dde, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SteamAvatarFace
-  faceRenderer: {fileID: 0}
->>>>>>> Stashed changes
+  m_Script: {fileID: 11500000, guid: 9b3cf552b1489aa45a539136d4a795d6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerSlotController
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  _probabilityTable: {fileID: 11400000, guid: 9ac475476cb65f14b996a6bb8ae60cd5, type: 2}
+  _spinInterval: 3
 --- !u!1 &7728028454824038608
 GameObject:
   m_ObjectHideFlags: 0
