@@ -14,11 +14,13 @@ public class PlayerAttack : NetworkBehaviour
     private float nextAttackTime;
 
     private PlayerRoleSync playerRole;
+    private PlayerAnimationSync animationSync;
 
     void Awake()
     {
         playerCamera = GetComponentInChildren<Camera>(true);
         playerRole = GetComponent<PlayerRoleSync>();
+        animationSync = GetComponent<PlayerAnimationSync>();
     }
 
     void Update()
@@ -55,6 +57,7 @@ public class PlayerAttack : NetworkBehaviour
             return;
 
         nextAttackTime = Time.time + attackCooldown;
+        RpcPlayAttackAnimation();
 
         // 플레이어의 몸을 기준으로 전방 공격
         Vector3 origin = transform.position + Vector3.up;
@@ -89,4 +92,14 @@ public class PlayerAttack : NetworkBehaviour
 
         Debug.Log($"[공격 실패] {name}: 사거리 내 대상 없음");
     }
+
+    [ClientRpc]
+    private void RpcPlayAttackAnimation()
+    {
+        if (animationSync != null)
+        {
+            animationSync.PlayAttackAnimation();
+        }
+    }
+
 }
