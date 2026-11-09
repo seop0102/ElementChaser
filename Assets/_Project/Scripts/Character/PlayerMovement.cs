@@ -17,12 +17,14 @@ public class PlayerMovement : NetworkBehaviour
     private bool isGameScene;
     private bool spawnReady;
     private bool spawnAcknowledged;
+    private PlayerTileController tileController;
 
     void Awake()
     {
         controller = GetComponent<CharacterController>();
         animator = GetComponentInChildren<Animator>();
         animationSync = GetComponent<PlayerAnimationSync>();
+        tileController = GetComponent<PlayerTileController>();
     }
 
     void OnEnable()
@@ -192,6 +194,32 @@ public class PlayerMovement : NetworkBehaviour
             transform.forward * input.y;
 
         direction.Normalize();
+        // X축과 Z축 이동 방향 분리
+        Vector3 moveX = new Vector3(direction.x, 0f, 0f);
+        Vector3 moveZ = new Vector3(0f, 0f, direction.z);
+        // 이동 예정 위치의 타일 진입 가능 여부 확인
+        if (tileController != null)
+        {
+            // 1. X축 이동 가능 여부 검사
+            Vector3 xTarget =
+                transform.position + moveX * moveSpeed * Time.deltaTime;
+             if (!tileController.CanMoveTo(xTarget))
+            {
+                moveX = Vector3.zero;
+            }
+            // 2. X축 이동을 반영한 상태에서 Z축 검사
+            Vector3 zTarget =
+                transform.position +
+                moveX * moveSpeed * Time.deltaTime +
+                moveZ * moveSpeed * Time.deltaTime;
+
+             if (!tileController.CanMoveTo(zTarget))
+            {
+                moveZ = Vector3.zero;
+            }
+            // 최종 이동 방향
+            direction = moveX + moveZ;
+        }
 
         if (animator != null)
         {
