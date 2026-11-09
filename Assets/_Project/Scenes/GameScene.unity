@@ -1775,7 +1775,7 @@ MonoBehaviour:
   windTile: {fileID: 3556974142482860544, guid: 8e4991bb6565405439910b009a1190d0, type: 3}
   width: 16
   height: 16
-  tileSize: 1
+  tileSize: 3
   normalOnly: 0
 --- !u!1 &1358469768
 GameObject:
