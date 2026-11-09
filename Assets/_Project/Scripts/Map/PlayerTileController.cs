@@ -101,7 +101,7 @@ public class PlayerTileController : NetworkBehaviour
         }
     }
 
-        private ElementType GetCounterElement(ElementType tileType)
+    private ElementType GetCounterElement(ElementType tileType)
     {
         switch (tileType)
         {
@@ -120,5 +120,51 @@ public class PlayerTileController : NetworkBehaviour
             default:
                 return ElementType.Normal;
         }
+    }
+
+    public bool CanMoveTo(Vector3 targetPosition)
+    {
+        // 현재 위치와 이동 예정 위치의 타일 확인
+        Tile currentTile = GetTileAtPosition(transform.position);
+        Tile targetTile = GetTileAtPosition(targetPosition);
+
+        // 타일이 감지되지 않으면 기존 이동 허용
+        if (targetTile == null)
+            return false;
+
+        // 현재 밟고 있는 타일이면 포인트 검사 없이 이동 허용
+        if (currentTile == targetTile)
+            return true;
+
+        // 일반 타일은 포인트 없이 이동 가능
+        if (targetTile.type == ElementType.Normal)
+            return true;
+
+        // 필요한 상쇄 원소 확인
+        ElementType costElement = GetCounterElement(targetTile.type);
+
+        // 인벤토리가 없거나 포인트가 부족하면 이동 차단
+        if (inventory == null)
+            return false;
+
+        return inventory.GetElementPoints(costElement) >= 1;
+    }
+
+    // 특정 위치 아래에 있는 타일 감지
+    private Tile GetTileAtPosition(Vector3 position)
+    {
+        Vector3 origin = position + Vector3.up * 0.5f;
+
+        if (!Physics.Raycast(
+                origin,
+                Vector3.down,
+                out RaycastHit hit,
+                rayDistance,
+                tileLayer))
+        {
+            return null;
+        }
+
+        return hit.collider.GetComponentInParent<Tile>();
     }
 }
