@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8eb32c08da47b94bac21bc870546eda, type: 3}
   m_Name: ThrowableSettings
   m_EditorClassIdentifier: Assembly-CSharp::ThrowableSettings
-  ThrowSpeed: 10
+  ThrowSpeed: 30
   Gravity: {x: 0, y: -9.81, z: 0}
   ProjectileRadius: 0.1
-  BounceSpeedRetention: 0.5
+  BounceSpeedRetention: 0.1
   SimulationStep: 0.02
   MaxFlightTime: 10

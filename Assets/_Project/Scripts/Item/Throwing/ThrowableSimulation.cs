@@ -21,7 +21,8 @@ public static class ThrowableSimulation
         ThrowableSettings settings,
         LayerMask collisionMask,
         Func<RaycastHit, bool> isLandingSurface,
-        out RaycastHit landingHit)
+        out RaycastHit landingHit,
+        Action<Vector3> onCollisionPoint = null)
     {
         if (settings == null)
         {
@@ -93,6 +94,7 @@ public static class ThrowableSimulation
 
             // 충돌 직전 중심 위치
             position += direction * hit.distance;
+            onCollisionPoint?.Invoke(position);
             position += hit.normal * SurfaceOffset;
 
             // 타일 윗면 착지

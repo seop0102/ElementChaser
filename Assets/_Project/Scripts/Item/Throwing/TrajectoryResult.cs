@@ -2,19 +2,28 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 공통 투척 경로 예측 결과
+public enum TrajectoryEndReason
+{
+    Landed,
+    Blocked,
+    TimedOut
+}
+
+// 전체 투척 경로 예측 결과
 public sealed class TrajectoryResult
 {
-    public IReadOnlyList<Vector3> Points { get; }
-    public bool HasLanded { get; }
-    public Vector3 LandingPoint { get; }
-    public Vector3 LandingNormal { get; }
+    private readonly RaycastHit _landingHit;
 
-    public TrajectoryResult(
-        List<Vector3> points,   //투척 경로(점선)
-        bool hasLanded,         //바닥 윗면 착지 여부
-        Vector3 landingPoint,   //바닥 접촉 위치
-        Vector3 landingNormal)  //바닥 접촉 법선
+    public IReadOnlyList<Vector3> Points { get; }   // 투척 경로 예측 결과 점들
+    public TrajectoryEndReason EndReason { get; }   // 투척 경로 예측 종료 이유 Blocked: 막힘, Landed: 착지, TimedOut: 시간 초과
+
+    public bool HasLanded =>
+        this.EndReason == TrajectoryEndReason.Landed;
+
+    private TrajectoryResult(
+        List<Vector3> points,
+        TrajectoryEndReason endReason,
+        RaycastHit landingHit)
     {
         if (points == null)
         {
@@ -22,8 +31,33 @@ public sealed class TrajectoryResult
         }
 
         this.Points = new List<Vector3>(points).AsReadOnly();
-        this.HasLanded = hasLanded;
-        this.LandingPoint = landingPoint;
-        this.LandingNormal = landingNormal;
+        this.EndReason = endReason;
+        this._landingHit = landingHit;
+    }
+
+    public static TrajectoryResult CreateLanded(
+        List<Vector3> points,
+        RaycastHit landingHit)
+    {
+        return new TrajectoryResult(
+            points, TrajectoryEndReason.Landed, landingHit);
+    }
+
+    public static TrajectoryResult CreateBlocked(List<Vector3> points)
+    {
+        return new TrajectoryResult(
+            points, TrajectoryEndReason.Blocked, default);
+    }
+
+    public static TrajectoryResult CreateTimedOut(List<Vector3> points)
+    {
+        return new TrajectoryResult(
+            points, TrajectoryEndReason.TimedOut, default);
+    }
+
+    public bool TryGetLandingHit(out RaycastHit hit)
+    {
+        hit = this.HasLanded ? this._landingHit : default;
+        return this.HasLanded;
     }
 }
