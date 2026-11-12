@@ -179,7 +179,7 @@ GameObject:
   - component: {fileID: 461177058}
   - component: {fileID: 461177057}
   - component: {fileID: 461177056}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: TestWall2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -309,11 +309,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ThrowableLauncherTest
   _useController: {fileID: 898070439}
-  _itemDefinition: {fileID: 11400000, guid: 9f44a9eb8b031944e874b8780da0bf7d, type: 2}
+  _itemDefinition: {fileID: 11400000, guid: 6fb52e9febc3e2f4eb10fc6289e4d196, type: 2}
   _aim: {fileID: 1616795243}
   _collisionMask:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 192
   _testFloor: {fileID: 524925623}
   _allowLanding: 1
   _landingRadius: 3
@@ -344,7 +344,7 @@ GameObject:
   - component: {fileID: 524925626}
   - component: {fileID: 524925625}
   - component: {fileID: 524925623}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: TestFloor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -618,6 +618,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ThrowableLauncher
   _settings: {fileID: 11400000, guid: e01626d3b4db05e4f960130879043db7, type: 2}
   _projectilePrefab: {fileID: 7190250094819403165, guid: 1a98ce8b4fdb14442938e35e40d858ad, type: 3}
+  _wallPlacementBlockingMask:
+    serializedVersion: 2
+    m_Bits: 128
 --- !u!4 &898070438
 Transform:
   m_ObjectHideFlags: 0
@@ -1124,7 +1127,7 @@ GameObject:
   - component: {fileID: 2062375186}
   - component: {fileID: 2062375185}
   - component: {fileID: 2062375184}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: TestWall1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1217,13 +1220,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2062375183}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.86023563, z: -0, w: 0.5098968}
-  m_LocalPosition: {x: -30.93, y: 7.7, z: 35.48}
+  m_LocalRotation: {x: -0, y: -0.9918377, z: -0, w: 0.1275069}
+  m_LocalPosition: {x: -12.64, y: 7.7, z: 16.39}
   m_LocalScale: {x: 2, y: 15, z: 15}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: -118.686, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -165.349, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
