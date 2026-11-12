@@ -21,7 +21,7 @@ public class SteamLobbyManager : MonoBehaviour
 
     private CSteamID _currentLobbyId;
     private bool _returningToLobby = false;
-
+    private bool _pendingHostDisconnectNotice;
     public bool ShouldShowLobby =>
         _returningToLobby || NetworkClient.active;
 
@@ -100,7 +100,10 @@ public class SteamLobbyManager : MonoBehaviour
             _mainMenuUI.ShowMainMenu();
             _mainMenuUI.SetCreateRoomInteractable(true);
         }
-
+        if (_pendingHostDisconnectNotice)
+        {
+            ShowMainMenuIfLoaded();
+        }
         Debug.Log("[SteamLobby] MainMenu UI 재연결 완료");
     }
 
@@ -248,6 +251,7 @@ public class SteamLobbyManager : MonoBehaviour
 
     public void LeaveLobby()
     {
+        _pendingHostDisconnectNotice = false;
         _returningToLobby = false;
         Debug.Log("[SteamLobby] 나가기 요청");
 
@@ -280,12 +284,13 @@ public class SteamLobbyManager : MonoBehaviour
     public void HandleDisconnected()
     {
         _returningToLobby = false;
-        Debug.Log("[SteamLobby] 호스트 연결 종료, 로비 초기화");
+        _pendingHostDisconnectNotice = true;
+
+        Debug.Log("[SteamLobby] 호스트 연결 종료 감지");
 
         ClearSteamLobby();
         ShowMainMenuIfLoaded();
     }
-
     private void ShowMainMenuIfLoaded()
     {
         if (SceneManager.GetActiveScene().name != "MainMenu")
@@ -293,10 +298,16 @@ public class SteamLobbyManager : MonoBehaviour
 
         _mainMenuUI = FindFirstObjectByType<MainMenuUI>();
 
-        if (_mainMenuUI != null)
+        if (_mainMenuUI == null)
+            return;
+
+        _mainMenuUI.ShowMainMenu();
+        _mainMenuUI.SetCreateRoomInteractable(true);
+
+        if (_pendingHostDisconnectNotice)
         {
-            _mainMenuUI.ShowMainMenu();
-            _mainMenuUI.SetCreateRoomInteractable(true);
+            _pendingHostDisconnectNotice = false;
+            _mainMenuUI.ShowHostDisconnectedNotice();
         }
     }
 
