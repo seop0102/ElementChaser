@@ -11,7 +11,6 @@ public class LobbyUI : MonoBehaviour
 
     [SerializeField] private TMP_Text _playerCountText;
     [SerializeField] private Button _startGameButton;
-    [SerializeField] private TMP_Text _backButtonText;
 
     public void OnClickStartGame()
     {
@@ -44,30 +43,36 @@ public class LobbyUI : MonoBehaviour
 
                 _playerNameTexts[i].text =
                     string.IsNullOrWhiteSpace(player.SteamName)
-                        ? "Connecting..."
+                        ? "-"
                         : player.SteamName;
 
                 _hostTexts[i].SetActive(player.IsLobbyHost);
             }
             else
             {
-                _playerNameTexts[i].text = "Waiting...";
+                _playerNameTexts[i].text = "";
                 _hostTexts[i].SetActive(false);
             }
         }
 
         int playerCount = sortedPlayers.Length;
 
-        _playerCountText.text = playerCount == 4
-            ? "Ready! 4 / 4"
-            : $"Waiting for players... {playerCount} / 4";
+        _playerCountText.text = $"{playerCount}/4";
 
         bool isHost = NetworkServer.active;
 
         _startGameButton.gameObject.SetActive(isHost);
         _startGameButton.interactable = isHost && playerCount == 4;
+        
+        
+        LobbyCharacterPreviewManager previewManager =
+            FindAnyObjectByType<LobbyCharacterPreviewManager>();
 
-        _backButtonText.text = isHost ? "Close Room" : "Leave Room";
+        if (previewManager != null)
+        {
+            previewManager.RefreshPreviews();
+        }
+
     }
     private void Awake()
     {
