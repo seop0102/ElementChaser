@@ -71,8 +71,31 @@ public sealed class ThrowableItemUseController : MonoBehaviour
             this._canUseAtLanding,
             out bool canLaunch);
 
-        this._previewRenderer.Show(
-            prediction, canLaunch, this._landingRadius);
+        WallPlacementSettings wallSettings = this._selectedItem.WallSettings;
+
+        if (wallSettings == null)
+        {
+            this._previewRenderer.Show(
+                prediction, canLaunch, this._landingRadius);
+            return;
+        }
+
+        if (prediction.TryGetLandingHit(out RaycastHit landingHit)
+            && WallPlacement.TryCreate(
+                landingHit.point,
+                direction,
+                wallSettings,
+                out WallPlacement placement))
+        {
+            bool canPlaceWall =
+                canLaunch && this._launcher.IsWallPlacementClear(placement);
+
+            this._previewRenderer.Show(prediction, canPlaceWall, 0f, placement);
+        }
+        else
+        {
+            this._previewRenderer.Show(prediction, false, 0f);
+        }
     }
 
     public bool TryThrow(Vector3 origin, Vector3 direction)
@@ -115,6 +138,11 @@ public sealed class ThrowableItemUseController : MonoBehaviour
         {
             this._previewRenderer.Hide();
         }
+    }
+    
+    public void RequestThrow(Vector3 origin, Vector3 direction)
+    {
+        this.TryThrow(origin, direction);
     }
 
     private void OnDisable()

@@ -8,7 +8,7 @@ public sealed class TestLandingMarkerEffect : ThrowableImpactEffect
 {
     [SerializeField] private GameObject _markerPrefab;
 
-    public override void Activate(RaycastHit landingHit)
+    public override void Activate(RaycastHit landingHit, WallPlacement? wallPlacement)
     {
         if (this._markerPrefab == null)
         {

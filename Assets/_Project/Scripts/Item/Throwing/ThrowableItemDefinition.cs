@@ -4,6 +4,7 @@ using UnityEngine;
 [CreateAssetMenu(
     fileName = "ThrowableItemDefinition",
     menuName = "ElementChaser/Item/Throwing/Throwable Item Definition")]
+
 public sealed class ThrowableItemDefinition : ScriptableObject
 {
     public ItemType Item;
@@ -16,6 +17,9 @@ public sealed class ThrowableItemDefinition : ScriptableObject
 
     [Tooltip("착지 시 실행할 효과")]
     public ThrowableImpactEffect ImpactEffect;
+
+    [Tooltip("벽 아이템의 배치 치수")]
+    public WallPlacementSettings WallSettings;
 
     public GameObject GetFlightVisualPrefab()
     {
