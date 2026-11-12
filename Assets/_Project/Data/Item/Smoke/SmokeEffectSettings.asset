@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 187a7ea65b9545c98879ad6cda95cd65, type: 3}
   m_Name: SmokeEffectSettings
   m_EditorClassIdentifier: Assembly-CSharp::SmokeEffectSettings
-  SmokeRadius: 3
-  SmokeDuration: 10
+  SmokeRadius: 6
+  SmokeDuration: 13
