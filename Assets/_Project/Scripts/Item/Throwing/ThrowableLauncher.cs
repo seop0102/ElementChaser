@@ -7,6 +7,9 @@ public sealed class ThrowableLauncher : MonoBehaviour
     [SerializeField] private ThrowableSettings _settings;
     [SerializeField] private ThrowableProjectile _projectilePrefab;
 
+    [Tooltip("벽 설치를 막는 기존 벽과 플레이어 레이어")]
+    [SerializeField] private LayerMask _wallPlacementBlockingMask;
+
     public bool TryLaunch(
         ThrowableItemDefinition itemDefinition,
         Vector3 origin,
@@ -37,12 +40,44 @@ public sealed class ThrowableLauncher : MonoBehaviour
             throw new InvalidOperationException("아이템의 착지 효과를 연결하세요.");
         }
 
+        WallPlacementSettings wallSettings = itemDefinition.WallSettings;
+
+        bool TryValidateLanding(RaycastHit hit, out WallPlacement? wallPlacement)
+        {
+            wallPlacement = null;
+
+            if (!canUseAtLanding(hit))
+            {
+                return false;
+            }
+
+            if (wallSettings == null)
+            {
+                return true;
+            }
+
+            if (!WallPlacement.TryCreate(
+                    hit.point, direction, wallSettings, out WallPlacement placement)
+                || !this.IsWallPlacementClear(placement))
+            {
+                return false;
+            }
+
+            wallPlacement = placement;
+            return true;
+        }
+
+        bool CanUseAtHit(RaycastHit hit)
+        {
+            return TryValidateLanding(hit, out _);
+        }
+
         this.GetPreview(
             origin,
             direction,
             collisionMask,
             isLandingSurface,
-            canUseAtLanding,
+            CanUseAtHit,
             out bool canLaunch);
 
         if (!canLaunch)
@@ -63,9 +98,9 @@ public sealed class ThrowableLauncher : MonoBehaviour
         projectile.FlightEnded += (endReason, landingHit) =>
         {
             if (endReason == TrajectoryEndReason.Landed
-                && canUseAtLanding(landingHit))
+                && TryValidateLanding(landingHit, out WallPlacement? placement))
             {
-                impactEffect.Activate(landingHit);
+                impactEffect.Activate(landingHit, placement);
             }
         };
 
@@ -78,6 +113,7 @@ public sealed class ThrowableLauncher : MonoBehaviour
 
         return true;
     }
+
     public TrajectoryResult GetPreview(
         Vector3 origin,
         Vector3 direction,
@@ -103,5 +139,15 @@ public sealed class ThrowableLauncher : MonoBehaviour
             && canUseAtLanding(hit);
 
         return prediction;
+    }
+
+    public bool IsWallPlacementClear(WallPlacement placement)
+    {
+        return !Physics.CheckBox(
+            placement.BoxCenter,
+            placement.Size * 0.5f,
+            placement.Rotation,
+            this._wallPlacementBlockingMask,
+            QueryTriggerInteraction.Ignore);
     }
 }
