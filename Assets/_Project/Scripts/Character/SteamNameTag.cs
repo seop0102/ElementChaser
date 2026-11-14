@@ -124,17 +124,24 @@ public class SteamNameTag : NetworkBehaviour
         nameText.text = "Player";
     }
 
-    private void LateUpdate()
+private void LateUpdate()
+{
+    if (nameTagCanvas == null || isLocalPlayer)
+        return;
+
+    Camera cam = null;
+
+    // 현재 클라이언트가 조종하는 플레이어의 카메라 찾기
+    if (NetworkClient.localPlayer != null)
     {
-        if (nameTagCanvas == null)
-            return;
-
-        Camera cam = Camera.main;
-
-        if (cam == null)
-            return;
-
-        // 각 클라이언트의 카메라 방향으로 회전
-        nameTagCanvas.rotation = cam.transform.rotation;
+        cam = NetworkClient.localPlayer
+            .GetComponentInChildren<Camera>(true);
     }
+
+    if (cam == null || !cam.isActiveAndEnabled)
+        return;
+
+    // 각 플레이어의 화면에서 닉네임이 정면을 향하도록 회전
+    nameTagCanvas.rotation = cam.transform.rotation;
+}
 }
