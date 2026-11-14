@@ -168,17 +168,33 @@ public class PlayerMovement : NetworkBehaviour
         spawnReady = true;
     }
 
-    void Update()
-    {
-        isGameScene =
-            SceneManager.GetActiveScene().name == "GameScene";
+    
+void Update()
+{
+    isGameScene =
+        SceneManager.GetActiveScene().name == "GameScene";
 
-        if (!isLocalPlayer || !isGameScene || !spawnReady)
-            return;
-        // Playing 상태일때만 이동 가능
-        if (GameStateManager.Instance == null ||
-            GameStateManager.Instance.CurrentPhase != GamePhase.Playing)
-            return;
+    // 로컬 플레이어, 게임 씬, 스폰 완료 확인
+    if (!isLocalPlayer || !isGameScene || !spawnReady)
+        return;
+
+    // 사망한 플레이어는 이동 불가능
+    PlayerHealth health = GetComponent<PlayerHealth>();
+
+    if (health != null && health.IsDead)
+    {
+        if (animationSync != null)
+            animationSync.SetMoving(false);
+
+        return;
+    }
+
+    // 게임 진행 중에만 이동 가능
+    if (GameStateManager.Instance == null ||
+        GameStateManager.Instance.CurrentPhase != GamePhase.Playing)
+        return;
+
+
         Vector2 input = Vector2.zero;
 
         if (Keyboard.current != null)
@@ -221,13 +237,17 @@ public class PlayerMovement : NetworkBehaviour
             direction = moveX + moveZ;
         }
 
-        if (animator != null)
-        {
-            animator.SetFloat("Speed", direction.magnitude);
-        }
+        // 실제 이동 가능 여부와 관계없이
+        // WASD 입력이 있으면 Run 애니메이션 유지
+        bool isTryingToMove = input.sqrMagnitude > 0.01f;
+
         if (animationSync != null)
         {
-            animationSync.SetMoving(direction.sqrMagnitude > 0.01f);
+            animationSync.SetMoving(isTryingToMove);
+        }
+        else if (animator != null)
+        {
+            animator.SetFloat("Speed", isTryingToMove ? 1f : 0f);
         }
 
         if(controller.isGrounded && verticalVelocity < 0f)

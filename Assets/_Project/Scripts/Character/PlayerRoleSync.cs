@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class PlayerRoleSync : NetworkBehaviour
 {
+    [Header("역할별 외형")]
+    [SerializeField] private Transform angelHalo;
+    [SerializeField] private Transform devilHorns;
+
     [SyncVar(hook = nameof(OnRoleChanged))]
     private PlayerRole role = PlayerRole.Runner;
 
@@ -17,6 +21,12 @@ public class PlayerRoleSync : NetworkBehaviour
 
     public bool IsJailed => isJailed;
 
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+        UpdateAppearance();
+    }
+
     [Server]
     public void SetJailed(bool jailed)
     {
@@ -27,7 +37,7 @@ public class PlayerRoleSync : NetworkBehaviour
     {
         Debug.Log($"[감옥 상태 변경] {gameObject.name}: {newValue}");
     }
-    
+
     [Server]
     public void SetRole(PlayerRole newRole)
     {
@@ -37,5 +47,15 @@ public class PlayerRoleSync : NetworkBehaviour
     private void OnRoleChanged(PlayerRole oldRole, PlayerRole newRole)
     {
         Debug.Log($"[역할 변경] {gameObject.name}: {oldRole} → {newRole}");
+        UpdateAppearance();
+    }
+
+    private void UpdateAppearance()
+    {
+        if (angelHalo != null)
+            angelHalo.gameObject.SetActive(IsRunner);
+
+        if (devilHorns != null)
+            devilHorns.gameObject.SetActive(IsChaser);
     }
 }
