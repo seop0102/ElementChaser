@@ -5,6 +5,19 @@ using UnityEngine.SceneManagement;
 
 public class PlayerLook : NetworkBehaviour
 {
+
+    [SyncVar]
+    private float syncedPitch = 0f;
+
+    // 다른 플레이어가 관전할 때 사용할 회전값
+    public float SyncedPitch => syncedPitch;
+
+    [Command]
+    private void CmdSyncPitch(float pitch)
+    {
+        syncedPitch = Mathf.Clamp(pitch, -90f, 90f);
+    }
+
     public float mouseSensitivity = 0.1f;
 
     private Transform playerBody;
@@ -126,10 +139,17 @@ public class PlayerLook : NetworkBehaviour
 
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
-
+        
         transform.localRotation =
             Quaternion.Euler(xRotation, 0f, 0f);
 
         playerBody.Rotate(Vector3.up * mouseX);
+
+        // 상하 회전값을 서버에 동기화
+        if (Mathf.Abs(xRotation - syncedPitch) > 1f)
+        {
+            CmdSyncPitch(xRotation);
+        }
+
     }
 }
