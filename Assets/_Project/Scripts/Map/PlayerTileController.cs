@@ -71,8 +71,16 @@ public class PlayerTileController : NetworkBehaviour
         if (previousTile == currentTile)
             return;
 
-        // 새로운 타일로 이동한 경우
+        // 이전 타일과 현재 타일의 종류 비교
+        ElementType previousType = previousTile.type;
+        ElementType currentType = currentTile.type;
+
+        // 다음 이동을 위해 현재 타일 갱신
         previousTile = currentTile;
+
+        // 같은 종류의 타일이면 원소 차감하지 않음
+        if (previousType == currentType)
+        return;
 
         ElementType element = currentTile.type;
 
@@ -132,9 +140,12 @@ public class PlayerTileController : NetworkBehaviour
         if (targetTile == null)
             return false;
 
-        // 현재 밟고 있는 타일이면 포인트 검사 없이 이동 허용
-        if (currentTile == targetTile)
+        // 같은 종류의 타일이면 포인트 검사 없이 이동 허용
+        if (currentTile != null &&
+            currentTile.type == targetTile.type)
+        {
             return true;
+        }
 
         // 일반 타일은 포인트 없이 이동 가능
         if (targetTile.type == ElementType.Normal)
