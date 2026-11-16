@@ -1671,7 +1671,7 @@ Transform:
   m_GameObject: {fileID: 863124229}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1875,9 +1875,9 @@ MonoBehaviour:
   fireTile: {fileID: -3015340114636148379, guid: 8b358ccb4a077114a8b3fe3c943ce939, type: 3}
   grassTile: {fileID: 6266230432002689522, guid: f674637eb1dca734c831fcb13f2f6eb3, type: 3}
   windTile: {fileID: 3556974142482860544, guid: 8e4991bb6565405439910b009a1190d0, type: 3}
-  width: 16
-  height: 16
-  tileSize: 3
+  width: 10
+  height: 10
+  tileSize: 10
   normalOnly: 0
 --- !u!1 &1358469768
 GameObject:
@@ -1905,7 +1905,7 @@ Transform:
   m_GameObject: {fileID: 1358469768}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 15}
+  m_LocalPosition: {x: 0, y: 3, z: 90}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2201,7 +2201,7 @@ Transform:
   m_GameObject: {fileID: 1685386680}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 15, y: 1, z: 15}
+  m_LocalPosition: {x: 90, y: 3, z: 90}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3010,7 +3010,7 @@ Transform:
   m_GameObject: {fileID: 2002044769}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 15, y: 1, z: 0}
+  m_LocalPosition: {x: 90, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
