@@ -22,11 +22,11 @@ public class MapGenerator : MonoBehaviour
         // 5개의 타일을 배열에 넣음
         tiles = new Tile[]
         {
-            normalTile,
             waterTile,
             fireTile,
             grassTile,
-            windTile
+            windTile,
+            normalTile
         };
 
         GenerateMap();
@@ -55,7 +55,7 @@ public class MapGenerator : MonoBehaviour
             else
             {
                 // 0 ~ 4 중 랜덤 선택
-                int randomIndex = Random.Range(0, tiles.Length);
+                int randomIndex = Random.Range(0, tiles.Length-1);
 
                 // 랜덤으로 선택된 타일
                 selectedTile = tiles[randomIndex];
