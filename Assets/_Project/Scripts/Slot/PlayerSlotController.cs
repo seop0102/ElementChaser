@@ -47,6 +47,9 @@ public class PlayerSlotController : NetworkBehaviour
     public event Action RoundCancelled;
     public event Action<SlotResult> ResultReceived;
 
+    // 인벤토리
+    private PlayerInventory _inventory;
+
     public override void OnStartServer()
     {
         base.OnStartServer();
@@ -72,6 +75,19 @@ public class PlayerSlotController : NetworkBehaviour
         }
 
         _roller = new SlotRoller(_probabilityTable);
+    }
+
+    private void Awake()
+    {
+        _inventory = GetComponent<PlayerInventory>();
+
+        if (_inventory == null)
+        {
+            Debug.LogError(
+                $"[Slot] {name}: PlayerInventory를 찾을 수 없습니다.",
+                this
+            );
+        }
     }
 
     [ServerCallback]
@@ -312,6 +328,9 @@ public class PlayerSlotController : NetworkBehaviour
         LastResult = result;
         HasResult = true;
 
+         // 인벤토리 보상 지급
+        ApplySlotReward(result);
+
         Debug.Log(
             $"[Slot][Owner] Player={netId} " +
             $"Round={roundId} Completed " +
@@ -319,7 +338,7 @@ public class PlayerSlotController : NetworkBehaviour
             this);
 
         ResultReceived?.Invoke(result);
-    }
+        }
 
     public override void OnStopServer()
     {
@@ -342,5 +361,64 @@ public class PlayerSlotController : NetworkBehaviour
         LastResult = default;
 
         base.OnStopClient();
+    }
+
+    private void ApplySlotReward(SlotResult result)
+    {
+        if (_inventory == null)
+        {
+            Debug.LogError("[Slot] 인벤토리가 없어 보상을 지급할 수 없습니다.");
+            return;
+        }
+
+        // 슬롯 3개 결과를 조합 판정기에 전달
+        CombinationResolver resolver = new CombinationResolver();
+        CombinationResult reward = resolver.Evaluate(
+        result.First,
+        result.Second,
+        result.Third
+        );
+
+        // 조합에 해당하는 보상이 없는 경우
+        if (!reward.Success)
+        {
+            Debug.Log(
+                $"[Slot] 조합 실패: " +
+                $"{result.First}/{result.Second}/{result.Third}"
+            );
+            return;
+        }
+
+        // 보상 종류에 따라 인벤토리에 지급
+        switch (reward.RewardType)
+        {
+            case CombinationRewardType.Item:
+
+                _inventory.AddItem(
+                    reward.Item,
+                    reward.Amount
+                );
+
+                Debug.Log(
+                    $"[Slot] 아이템 획득: " +
+                    $"{reward.Item} x{reward.Amount}"
+                );
+
+                break;
+
+            case CombinationRewardType.Element:
+
+                _inventory.AddElementPoints(
+                    reward.Element,
+                    reward.Amount
+                );
+
+                Debug.Log(
+                    $"[Slot] 원소 포인트 획득: " +
+                    $"{reward.Element} +{reward.Amount}"
+                );
+
+            break;
+        }
     }
 }
