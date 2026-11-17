@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6909374922316324362}
+  - component: {fileID: 4803022214512022022}
   m_Layer: 0
   m_Name: Prison
   m_TagString: Untagged
@@ -32,6 +33,23 @@ Transform:
   - {fileID: 1130567991878187296}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4803022214512022022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2452824312910708578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56bd2bb0084081c439d0c6a16aea6f8a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PrisonCage
+  visual: {fileID: 1130567991878187296}
+  dropHeight: 4
+  wallThickness: 0.08
+  testSize: {x: 1.5, y: 2.3, z: 1.5}
+  testDropDuration: 0.6
 --- !u!1001 &592835659806154443
 PrefabInstance:
   m_ObjectHideFlags: 0
