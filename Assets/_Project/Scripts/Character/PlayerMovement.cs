@@ -194,6 +194,32 @@ void Update()
         GameStateManager.Instance.CurrentPhase != GamePhase.Playing)
         return;
 
+        PlayerPrison prison = GetComponent<PlayerPrison>();
+
+        // 체력 동기화가 감금 정보보다 먼저 도착하는 짧은 순간도 막는다.
+        bool waitingForPrison =
+            health != null &&
+            health.CurrentHealth <= 0 &&
+            prison != null &&
+            !prison.IsJailed;
+
+        if (waitingForPrison || (prison != null && prison.IsDropping))
+        {
+            if (animationSync != null)
+                animationSync.SetMoving(false);
+
+            verticalVelocity = 0f;
+
+            if (prison != null && prison.IsJailed)
+            {
+                Vector3 fixedPosition =
+                    prison.ConstrainPosition(transform.position);
+
+                controller.Move(fixedPosition - transform.position);
+            }
+
+            return;
+        }
 
         Vector2 input = Vector2.zero;
 
@@ -259,6 +285,14 @@ void Update()
             direction * moveSpeed +
             Vector3.up * verticalVelocity;
 
-        controller.Move(velocity * Time.deltaTime);
+        // 먼저 이동할 위치를 계산한다.
+        Vector3 targetPosition =
+            transform.position + velocity * Time.deltaTime;
+
+        // 감금 중이라면 감옥 내부로 이동 범위를 제한한다.
+        if (prison != null)
+            targetPosition = prison.ConstrainPosition(targetPosition);
+
+        controller.Move(targetPosition - transform.position);
     }
 }
