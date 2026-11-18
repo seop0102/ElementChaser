@@ -29,8 +29,10 @@ public class LobbyUI : MonoBehaviour
     }
     public void RefreshLobby()
     {
-        NetworkPlayer[] players = FindObjectsByType<NetworkPlayer>();
-
+        NetworkPlayer[] players =
+            FindObjectsByType<NetworkPlayer>(
+                FindObjectsSortMode.None
+            );
         NetworkPlayer[] sortedPlayers = players
             .OrderBy(player => player.netId)
             .ToArray();
@@ -55,14 +57,27 @@ public class LobbyUI : MonoBehaviour
             }
         }
 
-        int playerCount = sortedPlayers.Length;
+        ElementNetworkManager manager =
+            NetworkManager.singleton as ElementNetworkManager;
+
+        int playerCount = manager != null
+            ? manager.LobbyPlayerCount
+            : 0;
 
         _playerCountText.text = $"{playerCount}/4";
 
         bool isHost = NetworkServer.active;
 
         _startGameButton.gameObject.SetActive(isHost);
-        _startGameButton.interactable = isHost && playerCount == 4;
+        bool namesReady =
+            sortedPlayers.Length == 4 &&
+            sortedPlayers.All(p =>
+                !string.IsNullOrWhiteSpace(p.SteamName));
+
+        _startGameButton.interactable =
+            isHost &&
+            playerCount == 4 &&
+            namesReady;
         
         
         LobbyCharacterPreviewManager previewManager =
@@ -73,6 +88,24 @@ public class LobbyUI : MonoBehaviour
             previewManager.RefreshPreviews();
         }
 
+    }
+    public void RefreshAfterPlayerRemoved()
+    {
+        if (!isActiveAndEnabled)
+            return;
+
+        StartCoroutine(RefreshNextFrame());
+    }
+
+    private System.Collections.IEnumerator RefreshNextFrame()
+    {
+        yield return null;
+
+        RefreshLobby();
+    }
+    private void OnEnable()
+    {
+        RefreshLobby();
     }
     private void Awake()
     {
