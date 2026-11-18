@@ -88,30 +88,53 @@ public class GameStateManager : NetworkBehaviour
     [Server]
     public void StartGameSequence()
     {
-        if (currentPhase != GamePhase.Waiting)
-            return;
+        Debug.Log(
+            $"[GameState] StartGameSequence 호출! " +
+            $"Phase={currentPhase}, isStarting={isStarting}"
+        );
 
-        // 중복 시작 방지
-        if (isStarting)
+        if (currentPhase != GamePhase.Waiting)
+        {
+            Debug.LogWarning(
+                $"[GameState] 시작 차단: Phase={currentPhase}"
+            );
             return;
+        }
+
+        if (isStarting)
+        {
+            Debug.LogWarning(
+                "[GameState] 시작 차단: 이미 시작 중"
+            );
+            return;
+        }
 
         isStarting = true;
         winnerNames = "";
 
+        Debug.Log("[GameState] GameStartRoutine 실행");
+
         StartCoroutine(GameStartRoutine());
     }
 
+
     // 술래 선정 및 게임 시작
+
     [Server]
     private IEnumerator GameStartRoutine()
     {
+        Debug.Log("[GameState] 코루틴 내부 진입 성공");
+
         PlayerRoleSync[] players =
             FindObjectsByType<PlayerRoleSync>(
-                FindObjectsSortMode.None
-            )
-            .OrderBy(p => p.netId)
-            .ToArray();
+                    FindObjectsSortMode.None
+                )
+                .OrderBy(p => p.netId)
+                .ToArray();
 
+        Debug.Log(
+            $"[GameState] PlayerRoleSync 발견: {players.Length}명"
+        );
         if (players.Length == 0)
         {
             Debug.LogError("[GameState] 플레이어가 없습니다.");
@@ -336,8 +359,13 @@ public class GameStateManager : NetworkBehaviour
     [ClientRpc]
     private void RpcShowDisconnectNotice()
     {
+        // 게임 중단 안내를 이미 받았다는 사실 기록
+        SteamLobbyManager.Instance?.NotifyGameInterrupted();
+
         GameReturnNotice notice =
-            FindFirstObjectByType<GameReturnNotice>();
+            FindFirstObjectByType<GameReturnNotice>(
+                FindObjectsInactive.Include
+            );
 
         if (notice != null)
         {
@@ -345,7 +373,12 @@ public class GameStateManager : NetworkBehaviour
         }
         else
         {
-            Debug.LogWarning("[GameState] GameReturnNotice 없음");
+            Debug.LogWarning(
+                "[GameState] GameReturnNotice 없음"
+            );
         }
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 }

@@ -1,4 +1,5 @@
 using UnityEngine;
+
 public class GameReturnNotice : MonoBehaviour
 {
     [SerializeField]
@@ -6,12 +7,17 @@ public class GameReturnNotice : MonoBehaviour
 
     private void Awake()
     {
-        _noticePanel.SetActive(false);
+        if (_noticePanel != null)
+            _noticePanel.SetActive(false);
     }
 
     public void ShowNotice()
     {
-        _noticePanel.SetActive(true);
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        if (_noticePanel != null)
+            _noticePanel.SetActive(true);
 
         Debug.Log("[UI] 플레이어 이탈 안내 표시");
     }
