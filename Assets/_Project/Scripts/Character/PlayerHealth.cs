@@ -5,6 +5,11 @@ using UnityEngine;
 public class PlayerHealth : NetworkBehaviour
 {
     [SerializeField] private int maxHealth = 4;
+    [Header("Death Ground Alignment")]
+    [SerializeField] private Transform characterModel;
+    [SerializeField] private float deathGroundOffset = 0f;
+
+private Vector3 originalModelLocalPosition;
 
     [SyncVar(hook = nameof(OnHealthChanged))]
     private int currentHealth;
@@ -15,6 +20,44 @@ public class PlayerHealth : NetworkBehaviour
     public int CurrentHealth => currentHealth;
     public int MaxHealth => maxHealth;
     public bool IsDead => isDead;
+
+
+[TargetRpc]
+private void TargetPlayHitEffect(
+    NetworkConnectionToClient target)
+{
+    HitEffectUI hitEffect =
+        FindFirstObjectByType<HitEffectUI>();
+
+    if (hitEffect != null)
+    {
+        hitEffect.Flash();
+    }
+    else
+    {
+        Debug.LogWarning("[HitEffect] UI를 찾지 못했습니다.");
+    }
+}
+
+    private void Awake()
+{
+    if (characterModel == null)
+    {
+        Animator modelAnimator =
+            GetComponentInChildren<Animator>(true);
+
+        if (modelAnimator != null)
+        {
+            characterModel = modelAnimator.transform;
+        }
+    }
+
+    if (characterModel != null)
+    {
+        originalModelLocalPosition =
+            characterModel.localPosition;
+    }
+}
 
     public override void OnStartServer()
     {
@@ -67,6 +110,8 @@ public class PlayerHealth : NetworkBehaviour
         );
 
         RpcPlayHitAnimation();
+        if (connectionToClient != null)
+            TargetPlayHitEffect(connectionToClient);
 
         if (currentHealth == 0)
         {
@@ -97,16 +142,29 @@ public class PlayerHealth : NetworkBehaviour
     }
 
     private void ApplyDeathState()
+{
+    if (characterModel != null)
     {
-        if (!isLocalPlayer)
-            return;
-
         if (isDead)
         {
-            Debug.Log("[관전] 사망 상태 확인");
-            // 다음 단계에서 PlayerSpectator와 연결
+            Vector3 position = originalModelLocalPosition;
+            position.y += deathGroundOffset;
+            characterModel.localPosition = position;
+        }
+        else
+        {
+            characterModel.localPosition = originalModelLocalPosition;
         }
     }
+
+    if (!isLocalPlayer)
+        return;
+
+    if (isDead)
+    {
+        Debug.Log("[관전] 사망 상태 확인");
+    }
+}
 
     [ClientRpc]
     private void RpcPlayHitAnimation()
