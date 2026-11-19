@@ -21,9 +21,21 @@ public class PlayerRoleSync : NetworkBehaviour
 
     public bool IsJailed => isJailed;
 
+    private void Awake()
+    {
+        // 네트워크 연결 전에도 기본 외형 적용
+        UpdateAppearance();
+    }
+
     public override void OnStartClient()
     {
         base.OnStartClient();
+        UpdateAppearance();
+    }
+
+    public override void OnStartServer()
+    {
+        base.OnStartServer();
         UpdateAppearance();
     }
 
@@ -42,6 +54,7 @@ public class PlayerRoleSync : NetworkBehaviour
     public void SetRole(PlayerRole newRole)
     {
         role = newRole;
+        UpdateAppearance();
     }
 
     private void OnRoleChanged(PlayerRole oldRole, PlayerRole newRole)
@@ -54,8 +67,13 @@ public class PlayerRoleSync : NetworkBehaviour
     {
         if (angelHalo != null)
             angelHalo.gameObject.SetActive(IsRunner);
+        else
+            Debug.LogWarning($"[RoleSync] {name}: Angel Halo 미연결");
 
         if (devilHorns != null)
             devilHorns.gameObject.SetActive(IsChaser);
+        else
+            Debug.LogWarning($"[RoleSync] {name}: Devil Horns 미연결");
     }
 }
+
