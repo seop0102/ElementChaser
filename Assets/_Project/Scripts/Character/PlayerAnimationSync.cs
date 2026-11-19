@@ -72,5 +72,28 @@ public class PlayerAnimationSync : NetworkBehaviour
 
         animator.SetTrigger("Hit");
     }
+    private void Update()
+{
+    if (animator == null || !isClient)
+        return;
+
+    if (!isMoving && !isLocalPlayer)
+        return;
+
+    bool moving = isLocalPlayer ? lastSentMoving : isMoving;
+
+    if (!moving)
+        return;
+
+    AnimatorStateInfo state = animator.GetCurrentAnimatorStateInfo(0);
+
+    // Run 상태가 끝났는데도 계속 이동 중이면 재생
+    if (state.IsName("Run") &&
+        !animator.IsInTransition(0) &&
+        state.normalizedTime >= 1f)
+    {
+        animator.Play("Run", 0, 0f);
+    }
+}
 
 }

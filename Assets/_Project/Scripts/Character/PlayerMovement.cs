@@ -189,10 +189,13 @@ void Update()
         return;
     }
 
-    // 게임 진행 중에만 이동 가능
-    if (GameStateManager.Instance == null ||
-        GameStateManager.Instance.CurrentPhase != GamePhase.Playing)
-        return;
+            // 게임 진행 중에만 이동 가능
+        if (GameStateManager.Instance == null ||
+            GameStateManager.Instance.CurrentPhase != GamePhase.Playing)
+        {
+            animationSync?.SetMoving(false);
+            return;
+        }
 
         PlayerPrison prison = GetComponent<PlayerPrison>();
 
