@@ -171,8 +171,13 @@ public sealed class ThrowableItemUseController : MonoBehaviour
         {
             this._heldVisual = Instantiate(
                 itemDefinition.HeldVisualPrefab,
+                this._heldVisualAnchor.position,
+                this._heldVisualAnchor.rotation);
+
+            // 손 위치를 따라가되 외형의 월드 크기는 유지
+            this._heldVisual.transform.SetParent(
                 this._heldVisualAnchor,
-                false);
+                true);
         }
 
         if (previousItem != this.HeldItem)
