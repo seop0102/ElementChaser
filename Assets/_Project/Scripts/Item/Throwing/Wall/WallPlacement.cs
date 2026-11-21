@@ -20,6 +20,15 @@ public readonly struct WallPlacement
         this.Size = size;
     }
 
+    // 호스트가 확정해 전달한 배치 복원
+    internal static WallPlacement FromConfirmed(
+        Vector3 groundCenter,
+        Quaternion rotation,
+        Vector3 size)
+    {
+        return new WallPlacement(groundCenter, rotation, size);
+    }
+
     public static bool TryCreate(
         Vector3 landingPoint,
         Vector3 aimDirection,
