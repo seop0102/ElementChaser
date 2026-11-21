@@ -13,33 +13,44 @@ public sealed class VineWallInstance : MonoBehaviour
     [Tooltip("외형이 자라는 시간")]
     [SerializeField, Min(0f)] private float _growDuration = 0.35f;
 
-    public void ApplyPlacement(WallPlacement placement)
+    public float Lifetime => this._lifetime;
+
+    public void ApplyPlacement(
+        WallPlacement placement,
+        float elapsedTime = 0f)
     {
+        elapsedTime = Mathf.Max(0f, elapsedTime);
+
+        float remainingTime = this._lifetime - elapsedTime;
+
+        if (remainingTime <= 0f)
+        {
+            this.gameObject.SetActive(false);
+            Destroy(this.gameObject);
+            return;
+        }
+
         Vector3 size = placement.Size;
 
-        // 콜라이더는 설치 즉시 최종 크기로 적용
         this._wallCollider.center = Vector3.up * (size.y * 0.5f);
         this._wallCollider.size = size;
         this._wallCollider.enabled = true;
 
-        this.DestroyAfterLifetime();
-        this.StartCoroutine(this.GrowVisual(size));
+        Destroy(this.gameObject, remainingTime);
+        this.StartCoroutine(this.GrowVisual(size, elapsedTime));
     }
 
-    private void DestroyAfterLifetime()
-    {
-        Destroy(this.gameObject, this._lifetime);
-    }
-
-    private IEnumerator GrowVisual(Vector3 size)
+    private IEnumerator GrowVisual(Vector3 size, float elapsedTime)
     {
         if (this._growDuration > 0f)
         {
-            float elapsed = 0f;
+            float elapsed = elapsedTime;
 
             while (elapsed < this._growDuration)
             {
-                float progress = Mathf.Clamp01(elapsed / this._growDuration);
+                float progress = Mathf.Clamp01(
+                    elapsed / this._growDuration);
+
                 this.SetVisualHeight(size, size.y * progress);
 
                 yield return null;
@@ -52,7 +63,10 @@ public sealed class VineWallInstance : MonoBehaviour
 
     private void SetVisualHeight(Vector3 size, float height)
     {
-        this._boxVisual.localScale = new Vector3(size.x, height, size.z);
-        this._boxVisual.localPosition = Vector3.up * (height * 0.5f);
+        this._boxVisual.localScale =
+            new Vector3(size.x, height, size.z);
+
+        this._boxVisual.localPosition =
+            Vector3.up * (height * 0.5f);
     }
 }

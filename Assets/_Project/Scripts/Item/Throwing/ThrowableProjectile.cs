@@ -21,6 +21,9 @@ public sealed class ThrowableProjectile : MonoBehaviour
 
     public event Action<TrajectoryEndReason, RaycastHit> FlightEnded;
 
+    // 실제 시뮬레이션 위치 변경
+    public event Action<Vector3> PositionChanged;
+
     public void Launch(
         Vector3 origin,
         Vector3 direction,
@@ -120,6 +123,7 @@ public sealed class ThrowableProjectile : MonoBehaviour
                 out RaycastHit landingHit);
 
             this.transform.position = this._position;
+            this.NotifyPositionChanged();
 
             switch (status)
             {
@@ -131,6 +135,18 @@ public sealed class ThrowableProjectile : MonoBehaviour
                     this.EndFlight(TrajectoryEndReason.Blocked, default);
                     return;
             }
+        }
+    }
+
+    private void NotifyPositionChanged()
+    {
+        try
+        {
+            this.PositionChanged?.Invoke(this._position);
+        }
+        catch (Exception exception)
+        {
+            Debug.LogException(exception, this);
         }
     }
 

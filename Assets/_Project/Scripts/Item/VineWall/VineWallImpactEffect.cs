@@ -8,20 +8,36 @@ public sealed class VineWallImpactEffect : ThrowableImpactEffect
 {
     [SerializeField] private VineWallInstance _wallPrefab;
 
-    public override void Activate(
-        RaycastHit landingHit,
-        WallPlacement? wallPlacement)
+    public override GameObject Activate(
+    Vector3 position,
+    Vector3 normal,
+    WallPlacement? wallPlacement,
+    float elapsedTime,
+    bool isAuthoritative,
+    Vector4 clipPlane)
     {
         if (!wallPlacement.HasValue || this._wallPrefab == null)
         {
             Debug.LogError("덩굴 벽 배치 또는 프리팹이 없습니다.", this);
-            return;
+            return null;
+        }
+
+        elapsedTime = Mathf.Max(0f, elapsedTime);
+
+        if (elapsedTime >= this._wallPrefab.Lifetime)
+        {
+            return null;
         }
 
         WallPlacement placement = wallPlacement.Value;
-        VineWallInstance wall = Instantiate(
-            this._wallPrefab, placement.GroundCenter, placement.Rotation);
 
-        wall.ApplyPlacement(placement);
+        VineWallInstance wall = Instantiate(
+            this._wallPrefab,
+            placement.GroundCenter,
+            placement.Rotation);
+
+        wall.ApplyPlacement(placement, elapsedTime);
+
+        return wall.gameObject;
     }
 }

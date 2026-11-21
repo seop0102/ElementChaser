@@ -1266,8 +1266,9 @@ GameObject:
   - component: {fileID: 5450548798855349206}
   - component: {fileID: 8703292899954826496}
   - component: {fileID: 5699519993114301751}
-  - component: {fileID: 6493109746193012013}
   - component: {fileID: 6960079569708058709}
+  - component: {fileID: 2698653959217070993}
+  - component: {fileID: -4427818686111940453}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1691,6 +1692,12 @@ MonoBehaviour:
   _launcher: {fileID: 5450548798855349206}
   _previewRenderer: {fileID: 7095406915366035521}
   _heldVisualAnchor: {fileID: 8698052552938394117}
+  _itemDefinitions:
+  - {fileID: 11400000, guid: 6fb52e9febc3e2f4eb10fc6289e4d196, type: 2}
+  _defaultCollisionMask:
+    serializedVersion: 2
+    m_Bits: 192
+  _defaultLandingRadius: 3
 --- !u!114 &5450548798855349206
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1720,10 +1727,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2dda0ea179515194b96870c46be5ceb4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LocalSmokeEquipTest
-  _smokeDefinition: {fileID: 11400000, guid: 6fb52e9febc3e2f4eb10fc6289e4d196, type: 2}
-  _collisionMask:
-    serializedVersion: 2
-    m_Bits: 192
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  _isEnabledForNetworkTest: 1
 --- !u!114 &5699519993114301751
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1739,7 +1746,6 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
---- !u!114 &6493109746193012013
 --- !u!114 &6960079569708058709
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1759,6 +1765,15 @@ MonoBehaviour:
   widthMultiplier: 1.5
   heightMultiplier: 1.15
   dropDuration: 0.6
+--- !u!114 &2698653959217070993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7007396128862476477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 921c40f937b7e874b9957d762ba10d72, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerThrowableInput
@@ -1768,6 +1783,23 @@ MonoBehaviour:
   itemController: {fileID: 7261967436294208114}
   throwOrigin: {fileID: 8698052552938394117}
   playerCamera: {fileID: 1834470950816112106}
+--- !u!114 &-4427818686111940453
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7007396128862476477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a45893fdc3b38524e906cc5fe030e71a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ThrowableItemNetwork
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  _maxThrowOriginDistance: 3
+  _flightSyncInterval: 0.05
 --- !u!1 &7081482911517571264
 GameObject:
   m_ObjectHideFlags: 0

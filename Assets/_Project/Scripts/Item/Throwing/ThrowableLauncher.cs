@@ -10,6 +10,15 @@ public sealed class ThrowableLauncher : MonoBehaviour
     [Tooltip("벽 설치를 막는 기존 벽과 플레이어 레이어")]
     [SerializeField] private LayerMask _wallPlacementBlockingMask;
 
+    // 실제 발사된 투척체와 아이템 정의
+    public event Action<ThrowableProjectile, ThrowableItemDefinition> ProjectileLaunched;
+
+    // 투척체, 종료 이유, 착지 정보, 효과 허용 여부, 벽 배치
+    public event Action<ThrowableProjectile,TrajectoryEndReason,RaycastHit,bool,WallPlacement?,Vector4> FlightResolved;
+
+    // 실제 생성된 착지 효과
+    public event Action<GameObject> ImpactActivated;
+
     public bool TryLaunch(
         ThrowableItemDefinition itemDefinition,
         Vector3 origin,
@@ -97,10 +106,47 @@ public sealed class ThrowableLauncher : MonoBehaviour
 
         projectile.FlightEnded += (endReason, landingHit) =>
         {
-            if (endReason == TrajectoryEndReason.Landed
-                && TryValidateLanding(landingHit, out WallPlacement? placement))
+            bool canActivateEffect = false;
+            WallPlacement? placement = null;
+            Vector4 clipPlane = Vector4.zero;
+
+            try
             {
-                impactEffect.Activate(landingHit, placement);
+                canActivateEffect =
+                    endReason == TrajectoryEndReason.Landed
+                    && TryValidateLanding(landingHit, out placement);
+
+                if (canActivateEffect)
+                {
+                    clipPlane = impactEffect.GetClipPlane(landingHit.point);
+
+                    GameObject effect = impactEffect.Activate(
+                        landingHit.point,
+                        landingHit.normal,
+                        placement,
+                        0f,
+                        true,
+                        clipPlane);
+
+                    if (effect != null)
+                    {
+                        this.NotifyImpactActivated(effect);
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception, this);
+            }
+            finally
+            {
+                this.NotifyFlightResolved(
+                    projectile,
+                    endReason,
+                    landingHit,
+                    canActivateEffect,
+                    placement,
+                    clipPlane);
             }
         };
 
@@ -111,7 +157,57 @@ public sealed class ThrowableLauncher : MonoBehaviour
             collisionMask,
             isLandingSurface);
 
+        this.NotifyProjectileLaunched(projectile, itemDefinition);
         return true;
+    }
+    private void NotifyImpactActivated(GameObject effect)
+    {
+        try
+        {
+            this.ImpactActivated?.Invoke(effect);
+        }
+        catch (Exception exception)
+        {
+            Debug.LogException(exception, this);
+        }
+    }
+
+    private void NotifyProjectileLaunched(
+    ThrowableProjectile projectile,
+    ThrowableItemDefinition definition)
+    {
+        try
+        {
+            this.ProjectileLaunched?.Invoke(projectile, definition);
+        }
+        catch (Exception exception)
+        {
+            Debug.LogException(exception, this);
+        }
+    }
+
+    private void NotifyFlightResolved(
+    ThrowableProjectile projectile,
+    TrajectoryEndReason endReason,
+    RaycastHit landingHit,
+    bool canActivateEffect,
+    WallPlacement? placement,
+    Vector4 clipPlane)
+    {
+        try
+        {
+            this.FlightResolved?.Invoke(
+                projectile,
+                endReason,
+                landingHit,
+                canActivateEffect,
+                placement,
+                clipPlane);
+        }
+        catch (Exception exception)
+        {
+            Debug.LogException(exception, this);
+        }
     }
 
     public TrajectoryResult GetPreview(
