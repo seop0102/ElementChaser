@@ -14,35 +14,75 @@ public sealed class SmokeImpactEffect : ThrowableImpactEffect
     [Tooltip("연막을 막는 벽 레이어")]
     [SerializeField] private LayerMask _wallMask;
 
-    public override void Activate(
-        RaycastHit landingHit,
-        WallPlacement? wallPlacement)
+    public override GameObject Activate(
+    Vector3 position,
+    Vector3 normal,
+    WallPlacement? wallPlacement,
+    float elapsedTime,
+    bool isAuthoritative,
+    Vector4 clipPlane)
     {
         if (this._smokeCloudPrefab == null || this._settings == null)
         {
             Debug.LogError("연막 프리팹과 설정을 연결하세요.", this);
-            return;
+            return null;
         }
 
-        Vector3 center = landingHit.point;
-        GameObject smokeCloud = Instantiate(
-            this._smokeCloudPrefab, center, Quaternion.identity);
+        elapsedTime = Mathf.Max(0f, elapsedTime);
+        float remainingTime = this._settings.SmokeDuration - elapsedTime;
 
-        if (this.TryGetWallPlane(center, out Vector4 clipPlane))
+        if (remainingTime <= 0f)
         {
-            MaterialPropertyBlock properties = new MaterialPropertyBlock();
-            ParticleSystemRenderer[] renderers =
-                smokeCloud.GetComponentsInChildren<ParticleSystemRenderer>();
+            return null;
+        }
 
-            foreach (ParticleSystemRenderer smokeRenderer in renderers)
+        GameObject smokeCloud = Instantiate(
+            this._smokeCloudPrefab, position, Quaternion.identity);
+
+        MaterialPropertyBlock properties = new MaterialPropertyBlock();
+
+        foreach (ParticleSystemRenderer smokeRenderer
+            in smokeCloud.GetComponentsInChildren<ParticleSystemRenderer>())
+        {
+            smokeRenderer.GetPropertyBlock(properties);
+            properties.SetVector(SmokeClipPlaneId, clipPlane);
+            smokeRenderer.SetPropertyBlock(properties);
+        }
+
+        // 수신 지연만큼 연기 진행 상태 보정
+        if (elapsedTime > 0f)
+        {
+            ParticleSystem[] systems =
+                smokeCloud.GetComponentsInChildren<ParticleSystem>();
+
+            foreach (ParticleSystem system in systems)
             {
-                smokeRenderer.GetPropertyBlock(properties);
-                properties.SetVector(SmokeClipPlaneId, clipPlane);
-                smokeRenderer.SetPropertyBlock(properties);
+                system.Simulate(elapsedTime, false, true, true);
+            }
+
+            foreach (ParticleSystem system in systems)
+            {
+                system.Play(false);
+
+                ParticleSystem.MainModule main = system.main;
+
+                if (!main.loop
+                    && elapsedTime >= main.duration + main.startDelay.constantMax)
+                {
+                    system.Stop(false, ParticleSystemStopBehavior.StopEmitting);
+                }
             }
         }
 
-        Destroy(smokeCloud, this._settings.SmokeDuration);
+        Destroy(smokeCloud, remainingTime);
+
+        return smokeCloud;
+    }
+
+    public override Vector4 GetClipPlane(Vector3 position)
+    {
+        this.TryGetWallPlane(position, out Vector4 clipPlane);
+        return clipPlane;
     }
 
     // 착지점에 가장 가까운 벽 옆면 선택
