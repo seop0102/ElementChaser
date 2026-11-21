@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 732cf983910cc1f40a9b331771113933, type: 3}
   m_Name: VineWallImpactEffect
   m_EditorClassIdentifier: Assembly-CSharp::VineWallImpactEffect
-  _wallPrefab: {fileID: 0}
+  _wallPrefab: {fileID: 2085689009742873174, guid: 0b352a902de504249936360dea0d9989, type: 3}

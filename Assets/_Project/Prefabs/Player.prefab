@@ -1694,6 +1694,7 @@ MonoBehaviour:
   _heldVisualAnchor: {fileID: 8698052552938394117}
   _itemDefinitions:
   - {fileID: 11400000, guid: 6fb52e9febc3e2f4eb10fc6289e4d196, type: 2}
+  - {fileID: 11400000, guid: 24b48d5ece6fbb842960a5709390d340, type: 2}
   _defaultCollisionMask:
     serializedVersion: 2
     m_Bits: 192
@@ -1730,7 +1731,7 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  _isEnabledForNetworkTest: 1
+  _isEnabledForNetworkTest: 0
 --- !u!114 &5699519993114301751
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cdfcb480b4bcd934898f737c1afb9ff5, type: 3}
-  m_Name: ThrowableItemDefinition
+  m_Name: VineWallDefinition
   m_EditorClassIdentifier: Assembly-CSharp::ThrowableItemDefinition
-  Item: 0
-  HeldVisualPrefab: {fileID: 0}
+  Item: 3
+  HeldVisualPrefab: {fileID: 8953479522935392758, guid: 9cabdc6b75625094eb642d640caef298, type: 3}
   FlightVisualPrefab: {fileID: 0}
-  ImpactEffect: {fileID: 0}
-  WallSettings: {fileID: 0}
+  ImpactEffect: {fileID: 11400000, guid: 9f09cc018b2e2824bbf368d7212f2b0a, type: 2}
+  WallSettings: {fileID: 11400000, guid: 7f356b05a908a1142936c877bf125ed8, type: 2}

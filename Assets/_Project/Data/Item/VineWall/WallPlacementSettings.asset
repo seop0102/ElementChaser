@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: WallPlacementSettings
   m_EditorClassIdentifier: Assembly-CSharp::WallPlacementSettings
   Length: 6
-  Thickness: 3
+  Thickness: 1.8
   Height: 4
