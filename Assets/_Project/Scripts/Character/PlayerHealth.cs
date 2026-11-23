@@ -109,9 +109,13 @@ private void TargetPlayHitEffect(
             $"[피격] {name} 체력 {oldHealth} → {currentHealth}"
         );
 
-        RpcPlayHitAnimation();
-        if (connectionToClient != null)
-            TargetPlayHitEffect(connectionToClient);
+        
+RpcPlayHitAnimation();
+RpcPlayHitFlash(); // 추가!
+
+if (connectionToClient != null)
+    TargetPlayHitEffect(connectionToClient);
+
 
         if (currentHealth == 0)
         {
@@ -190,4 +194,22 @@ private void TargetPlayHitEffect(
             cameraShake.Shake();
         }
     }
+
+[ClientRpc]
+private void RpcPlayHitFlash()
+{
+    PlayerHitFlash hitFlash =
+        GetComponent<PlayerHitFlash>();
+
+    if (hitFlash == null)
+    {
+        hitFlash = GetComponentInChildren<PlayerHitFlash>(true);
+    }
+
+    if (hitFlash != null)
+    {
+        hitFlash.PlayHitFlash();
+    }
+}
+
 }
