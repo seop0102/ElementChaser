@@ -6,7 +6,7 @@ public sealed class ThrowableItemUseController : MonoBehaviour
 {
     [SerializeField] private ThrowableLauncher _launcher;
     [SerializeField] private ThrowablePreviewRenderer _previewRenderer;
-    [SerializeField] private Transform _heldVisualAnchor;
+    [SerializeField] private ThrowableHeldVisual _heldVisual;
 
     [Tooltip("장착할 수 있는 아이템 정의")]
     [SerializeField] private ThrowableItemDefinition[] _itemDefinitions;
@@ -19,7 +19,6 @@ public sealed class ThrowableItemUseController : MonoBehaviour
     [SerializeField, Min(0f)] private float _defaultLandingRadius = 3f;
 
     private ThrowableItemDefinition _selectedItem;
-    private GameObject _heldVisual;
     private LayerMask _collisionMask;
     private Func<RaycastHit, bool> _isLandingSurface;
     private Func<RaycastHit, bool> _canUseAtLanding;
@@ -134,10 +133,9 @@ public sealed class ThrowableItemUseController : MonoBehaviour
             return;
         }
 
-        if (definition.HeldVisualPrefab != null
-            && this._heldVisualAnchor == null)
+        if (definition.HeldVisualPrefab != null && this._heldVisual == null)
         {
-            Debug.LogWarning("아이템을 표시할 손 위치를 연결하세요.", this);
+            Debug.LogWarning("장착 외형 표시 컴포넌트를 연결하세요.", this);
             return;
         }
 
@@ -176,6 +174,13 @@ public sealed class ThrowableItemUseController : MonoBehaviour
             throw new ArgumentNullException(nameof(canUseAtLanding));
         }
 
+        if (itemDefinition.HeldVisualPrefab != null
+            && this._heldVisual == null)
+        {
+            throw new InvalidOperationException(
+                "장착 외형 표시 컴포넌트를 연결하세요.");
+        }
+
         ItemType previousItem = this.HeldItem;
 
         this.ClearSelection();
@@ -186,17 +191,15 @@ public sealed class ThrowableItemUseController : MonoBehaviour
         this._isLandingSurface = isLandingSurface;
         this._canUseAtLanding = canUseAtLanding;
 
-        if (itemDefinition.HeldVisualPrefab != null)
-        {
-            this._heldVisual = Instantiate(
-                itemDefinition.HeldVisualPrefab,
-                this._heldVisualAnchor.position,
-                this._heldVisualAnchor.rotation);
+        // 네트워크 미사용 환경도 본인 화면으로 처리
+        bool isLocalPlayer =
+            this._network == null
+            || !this._network.IsNetworkActive
+            || this._network.isLocalPlayer;
 
-            // 손 위치를 따라가되 외형의 월드 크기는 유지
-            this._heldVisual.transform.SetParent(
-                this._heldVisualAnchor,
-                true);
+        if (this._heldVisual != null)
+        {
+            this._heldVisual.Show(itemDefinition, isLocalPlayer);
         }
 
         if (previousItem != this.HeldItem)
@@ -331,9 +334,7 @@ public sealed class ThrowableItemUseController : MonoBehaviour
 
         if (this._heldVisual != null)
         {
-            this._heldVisual.SetActive(false);
-            Destroy(this._heldVisual);
-            this._heldVisual = null;
+            this._heldVisual.Clear();
         }
 
         if (this._previewRenderer != null)
