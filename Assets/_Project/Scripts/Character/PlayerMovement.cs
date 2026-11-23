@@ -6,8 +6,19 @@ using System.Collections;
 
 public class PlayerMovement : NetworkBehaviour
 {
-    [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private float gravity = -9.81f;
+    
+[Header("기본 이동")]
+[SerializeField] private float moveSpeed = 5f;
+[SerializeField] private float gravity = -9.81f;
+
+[Header("역할별 이동 속도")]
+[SerializeField] private float chaserSpeedMultiplier = 1.2f;
+
+[Header("달리기")]
+[SerializeField] private float sprintMultiplier = 1.5f;
+
+private PlayerRoleSync roleSync;
+
 
     private CharacterController controller;
     private float verticalVelocity;
@@ -25,6 +36,7 @@ public class PlayerMovement : NetworkBehaviour
         animator = GetComponentInChildren<Animator>();
         animationSync = GetComponent<PlayerAnimationSync>();
         tileController = GetComponent<PlayerTileController>();
+        roleSync = GetComponent<PlayerRoleSync>(); 
     }
 
     void OnEnable()
@@ -234,6 +246,26 @@ void Update()
             if (Keyboard.current.aKey.isPressed) input.x -= 1;
         }
 
+// 술래일 경우 기본 이동 속도 증가
+float currentSpeed = moveSpeed;
+
+if (roleSync != null && roleSync.IsChaser)
+{
+    currentSpeed *= chaserSpeedMultiplier;
+}
+
+// Shift를 누르고 있으면 달리기
+bool isSprinting =
+    Keyboard.current != null &&
+    (Keyboard.current.leftShiftKey.isPressed ||
+     Keyboard.current.rightShiftKey.isPressed);
+
+if (isSprinting && input.sqrMagnitude > 0.01f)
+{
+    currentSpeed *= sprintMultiplier;
+}
+
+
         Vector3 direction =
             transform.right * input.x +
             transform.forward * input.y;
@@ -247,7 +279,7 @@ void Update()
         {
             // 1. X축 이동 가능 여부 검사
             Vector3 xTarget =
-                transform.position + moveX * moveSpeed * Time.deltaTime;
+                transform.position + moveX * currentSpeed * Time.deltaTime;
              if (!tileController.CanMoveTo(xTarget))
             {
                 moveX = Vector3.zero;
@@ -255,8 +287,8 @@ void Update()
             // 2. X축 이동을 반영한 상태에서 Z축 검사
             Vector3 zTarget =
                 transform.position +
-                moveX * moveSpeed * Time.deltaTime +
-                moveZ * moveSpeed * Time.deltaTime;
+                moveX * currentSpeed * Time.deltaTime +
+                moveZ * currentSpeed * Time.deltaTime;
 
              if (!tileController.CanMoveTo(zTarget))
             {
@@ -285,7 +317,7 @@ void Update()
         verticalVelocity += gravity * Time.deltaTime;
 
         Vector3 velocity =
-            direction * moveSpeed +
+            direction * currentSpeed +
             Vector3.up * verticalVelocity;
 
         // 먼저 이동할 위치를 계산한다.
