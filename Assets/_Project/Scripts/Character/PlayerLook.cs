@@ -26,6 +26,9 @@ public class PlayerLook : NetworkBehaviour
     private float xRotation = 0f;
 
     private bool isGameScene = false;
+    
+    // 원형 메뉴가 열려 있는 동안 카메라 회전 방지
+    public bool isRadialMenuOpen = false;
 
     void Awake()
     {
@@ -120,6 +123,10 @@ public class PlayerLook : NetworkBehaviour
 
         // 게임 진행 중에만 카메라 회전 허용
         if (gameState.CurrentPhase != GamePhase.Playing)
+            return;
+
+        // 원형 메뉴가 열려 있으면 카메라 회전 중지
+        if (isRadialMenuOpen)
             return;
 
         // FPS 마우스 잠금
