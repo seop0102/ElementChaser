@@ -90,16 +90,16 @@ public class InventoryUI : MonoBehaviour
 
         // 원소 포인트 표시
         waterPointsText.text =
-            $"Water: {inventory.GetElementPoints(ElementType.Water)}p";
+            $"{inventory.GetElementPoints(ElementType.Water)}p";
 
         firePointsText.text =
-            $"Fire: {inventory.GetElementPoints(ElementType.Fire)}p";
+            $"{inventory.GetElementPoints(ElementType.Fire)}p";
 
         grassPointsText.text =
-            $"Grass: {inventory.GetElementPoints(ElementType.Grass)}p";
+            $"{inventory.GetElementPoints(ElementType.Grass)}p";
 
         windPointsText.text =
-            $"Wind: {inventory.GetElementPoints(ElementType.Wind)}p";
+            $"{inventory.GetElementPoints(ElementType.Wind)}p";
     }
 
     private void DisconnectInventory()
