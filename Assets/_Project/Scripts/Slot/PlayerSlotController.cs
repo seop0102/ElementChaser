@@ -240,6 +240,9 @@ public class PlayerSlotController : NetworkBehaviour
             $"{result.First}/{result.Second}/{result.Third}",
             this);
 
+        // 서버에서 슬롯 보상 계산 및 지급
+        ApplySlotReward(result);
+
         TargetRoundCompleted(
             connectionToClient,
             _roundId,
@@ -328,9 +331,6 @@ public class PlayerSlotController : NetworkBehaviour
         LastResult = result;
         HasResult = true;
 
-         // 인벤토리 보상 지급
-        ApplySlotReward(result);
-
         Debug.Log(
             $"[Slot][Owner] Player={netId} " +
             $"Round={roundId} Completed " +
@@ -363,6 +363,7 @@ public class PlayerSlotController : NetworkBehaviour
         base.OnStopClient();
     }
 
+    [Server]
     private void ApplySlotReward(SlotResult result)
     {
         if (_inventory == null)

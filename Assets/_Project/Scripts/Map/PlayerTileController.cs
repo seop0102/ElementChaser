@@ -91,21 +91,26 @@ public class PlayerTileController : NetworkBehaviour
         // 타일에 대응하는 상쇄 원소 결정
         ElementType costElement = GetCounterElement(element);
 
-       // 상쇄 원소 포인트 1 차감
-        bool success =
-            inventory.TrySpendElementPoints(costElement, 1);
+        // 서버에 상쇄 원소 포인트 차감 요청
+        CmdRequestSpendElementPoints(costElement);
+
+    }
+
+    [Command]
+    private void CmdRequestSpendElementPoints(ElementType element)
+    {
+        if (inventory == null)
+            return;
+
+        bool success = inventory.TrySpendElementPoints(element, 1);
 
         if (success)
         {
-            Debug.Log(
-                $"[Tile] {element} 타일 진입 → 1p 차감"
-            );
+            Debug.Log($"[Server] {element} 포인트 1 차감 성공");
         }
         else
         {
-            Debug.Log(
-                $"[Tile] {element} 포인트 부족"
-            );
+            Debug.Log($"[Server] {element} 포인트 부족");
         }
     }
 
@@ -114,13 +119,13 @@ public class PlayerTileController : NetworkBehaviour
         switch (tileType)
         {
          case ElementType.Water:
-                return ElementType.Grass;
-
-            case ElementType.Fire:
                 return ElementType.Water;
 
-            case ElementType.Grass:
+            case ElementType.Fire:
                 return ElementType.Fire;
+
+            case ElementType.Grass:
+                return ElementType.Grass;
 
             case ElementType.Wind:
                 return ElementType.Wind;

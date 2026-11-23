@@ -28,6 +28,7 @@ public sealed class ThrowableItemUseController : MonoBehaviour
     private Action<ItemType, bool> _onUseCompleted;
     private bool _isProcessingUse;
     private ThrowableItemNetwork _network;
+    private PlayerInventory _inventory;
     public bool HasSelection => this._selectedItem != null;
     public ItemType HeldItem => this._selectedItem != null ? this._selectedItem.Item : ItemType.None;
 
@@ -47,6 +48,24 @@ public sealed class ThrowableItemUseController : MonoBehaviour
     private void Awake()
     {
         this._network = GetComponent<ThrowableItemNetwork>();
+        this._inventory = GetComponent<PlayerInventory>();
+
+        if (this._inventory == null)
+        {
+            Debug.LogError("PlayerInventory를 찾을 수 없습니다.", this);
+            return;
+        }
+
+        // 인벤토리 보유 확인 및 사용 결과 처리 연결
+        this.SetInventoryHandlers(
+            item => this._inventory.GetItemCount(item) > 0,
+            (item, hasLaunched) =>
+            {
+                if (hasLaunched)
+                {
+                    this._inventory.TryUseItem(item);
+                }
+            });
     }
 
     // 인벤토리의 보유 확인과 사용 결과 처리 연결
