@@ -1269,6 +1269,8 @@ GameObject:
   - component: {fileID: 6960079569708058709}
   - component: {fileID: 2698653959217070993}
   - component: {fileID: -4427818686111940453}
+  - component: {fileID: 1388967423106303397}
+  - component: {fileID: 6221017216551645678}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1289,8 +1291,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 5212214343731624846}
   - {fileID: 8346649228619210613}
+  - {fileID: 5212214343731624846}
   - {fileID: 5185139716834121398}
   - {fileID: 2656016049073452627}
   m_Father: {fileID: 0}
@@ -1424,6 +1426,8 @@ MonoBehaviour:
   syncInterval: 0
   moveSpeed: 5
   gravity: -9.81
+  chaserSpeedMultiplier: 1.2
+  sprintMultiplier: 1.5
 --- !u!143 &8623098532546451385
 CharacterController:
   m_ObjectHideFlags: 0
@@ -1540,6 +1544,11 @@ MonoBehaviour:
   syncInterval: 0
   angelHalo: {fileID: 2890709650298500615}
   devilHorns: {fileID: 4006124110622113991}
+  characterModel: {fileID: 5212214343731624846}
+  bodyRenderer: {fileID: 2889409915981267354}
+  angelMaterial: {fileID: 2100000, guid: faa14ab94ef8c3244a8cb697321565d8, type: 2}
+  devilMaterial: {fileID: 2100000, guid: c87cb8fea46700b40bded9c6d39a78a5, type: 2}
+  chaserScale: 1.5
 --- !u!114 &2269344917695229812
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1801,6 +1810,39 @@ MonoBehaviour:
   syncInterval: 0
   _maxThrowOriginDistance: 3
   _flightSyncInterval: 0.05
+--- !u!114 &1388967423106303397
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7007396128862476477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5f8571c8c7699a4ebb74eb669a68770, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHitFlash
+  bodyRenderers:
+  - {fileID: 2889409915981267354}
+  hitColor: {r: 1, g: 0, b: 0, a: 1}
+  flashDuration: 0.15
+--- !u!114 &6221017216551645678
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7007396128862476477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97a41ed3bee27cd4f8e7a435e3a95746, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerFirstPersonVisibility
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  hideRenderers:
+  - {fileID: 2889409915981267354}
 --- !u!1 &7081482911517571264
 GameObject:
   m_ObjectHideFlags: 0
