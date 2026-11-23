@@ -32,7 +32,22 @@ public class PlayerLook : NetworkBehaviour
 
     void Awake()
     {
-        playerBody = transform.parent;
+        
+PlayerMovement movement =
+    GetComponentInParent<PlayerMovement>();
+
+if (movement != null)
+{
+    playerBody = movement.transform;
+}
+else
+{
+    Debug.LogError(
+        "[PlayerLook] PlayerMovement를 찾을 수 없습니다.",
+        this
+    );
+}
+
         playerCamera = GetComponent<Camera>();
         audioListener = GetComponent<AudioListener>();
 

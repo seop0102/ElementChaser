@@ -49,7 +49,13 @@ public class PlayerAttack : NetworkBehaviour
             GameStateManager.Instance.CurrentPhase != GamePhase.Playing)
             return;
 
+        
+        // 내 화면에서는 즉시 공격 애니메이션 재생
+        animationSync?.PlayAttackAnimation();
+
+        // 실제 공격 판정은 서버에 요청
         CmdAttack();
+
     }
 
     [Command]
@@ -152,14 +158,13 @@ public class PlayerAttack : NetworkBehaviour
         }
     }
 
-    [ClientRpc]
-    private void RpcPlayAttackAnimation()
-    {
-        if (animationSync != null)
-        {
-            animationSync.PlayAttackAnimation();
-        }
-    }
+    
+[ClientRpc(includeOwner = false)]
+private void RpcPlayAttackAnimation()
+{
+    animationSync?.PlayAttackAnimation();
+}
+
 
     // Scene 뷰에서 공격 범위 시각화
     private void OnDrawGizmosSelected()
