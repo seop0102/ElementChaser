@@ -21,26 +21,36 @@ public class InventoryTest : NetworkBehaviour
         // 1 키: 물 포인트 +1
         if (Keyboard.current.digit1Key.wasPressedThisFrame)
         {
-            inventory.AddElementPoints(ElementType.Water, 1);
+            CmdRequestAddElementPoints(ElementType.Water);
         }
 
         // 2 키: 불 포인트 +1
         if (Keyboard.current.digit2Key.wasPressedThisFrame)
         {
-            inventory.AddElementPoints(ElementType.Fire, 1);
+            CmdRequestAddElementPoints(ElementType.Fire);
         }
 
-        // 3 키: 물 포인트 -1
+        // 3 키: 물 포인트 +1
         if (Keyboard.current.digit3Key.wasPressedThisFrame)
         {
-            inventory.AddElementPoints(ElementType.Grass, 1);
+            CmdRequestAddElementPoints(ElementType.Grass);
         }
 
-        // 4 키: 폭탄 +1
+        // 4 키: 바람 포인트 +1
         if (Keyboard.current.digit4Key.wasPressedThisFrame)
         {
-            inventory.AddElementPoints(ElementType.Wind, 1);
+            CmdRequestAddElementPoints(ElementType.Wind);
         }
 
     }
+
+    [Command]
+    private void CmdRequestAddElementPoints(ElementType element)
+    {
+        if (inventory == null)
+            return;
+
+        inventory.AddElementPoints(element, 1);
+    }
+
 }
