@@ -504,7 +504,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0.677, z: 0.263}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 6872980227074027903}
   m_Father: {fileID: 6278529283377629527}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!20 &1834470950816112106
@@ -582,6 +583,7 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0
   mouseSensitivity: 0.1
+  isRadialMenuOpen: 0
 --- !u!114 &3707574267580737133
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -878,6 +880,37 @@ Transform:
   m_Children:
   - {fileID: 8025233822026931372}
   m_Father: {fileID: 6906887601448106538}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &5928514467370692411
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6872980227074027903}
+  m_Layer: 0
+  m_Name: FirstPersonItemAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6872980227074027903
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5928514467370692411}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.35, y: -0.2, z: 0.7}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8346649228619210613}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6329859185176877375
 GameObject:
@@ -1269,6 +1302,7 @@ GameObject:
   - component: {fileID: 6960079569708058709}
   - component: {fileID: 2698653959217070993}
   - component: {fileID: -4427818686111940453}
+  - component: {fileID: 5970336186163748449}
   - component: {fileID: 1388967423106303397}
   - component: {fileID: 6221017216551645678}
   m_Layer: 0
@@ -1700,7 +1734,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _launcher: {fileID: 5450548798855349206}
   _previewRenderer: {fileID: 7095406915366035521}
-  _heldVisualAnchor: {fileID: 8698052552938394117}
+  _heldVisual: {fileID: 5970336186163748449}
   _itemDefinitions:
   - {fileID: 11400000, guid: 6fb52e9febc3e2f4eb10fc6289e4d196, type: 2}
   - {fileID: 11400000, guid: 24b48d5ece6fbb842960a5709390d340, type: 2}
@@ -1810,6 +1844,21 @@ MonoBehaviour:
   syncInterval: 0
   _maxThrowOriginDistance: 3
   _flightSyncInterval: 0.05
+--- !u!114 &5970336186163748449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7007396128862476477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2327bc8e7700d7c45a0cc5ed49c20e6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ThrowableHeldVisual
+  _worldAnchor: {fileID: 8698052552938394117}
+  _firstPersonAnchor: {fileID: 6872980227074027903}
+  _playerCamera: {fileID: 1834470950816112106}
 --- !u!114 &1388967423106303397
 MonoBehaviour:
   m_ObjectHideFlags: 0
