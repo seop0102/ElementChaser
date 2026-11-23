@@ -3,6 +3,7 @@ using Mirror;
 using UnityEngine;
 using System.Collections.Generic;
 
+// 호스트 벽 생성 -> 투척 번호로 벽 등록/원격도 같은거로 등록 -> 호스트 제거(TryDestroy , 수명x) -> removed 이벤트 -> 목록정리,원격도 제거
 // 아이템 장착과 투척 요청 처리
 [RequireComponent(typeof(ThrowableItemUseController))]
 [RequireComponent(typeof(PlayerRoleSync))]
@@ -35,15 +36,24 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
 
     private readonly List<GameObject> _remoteEffects = new List<GameObject>();
     private readonly List<GameObject> _serverEffects = new List<GameObject>();
+    private readonly Dictionary<uint, ServerWall> _serverWalls = new Dictionary<uint, ServerWall>();
 
+    private readonly Dictionary<uint, ItemWallInstance> _remoteWalls = new Dictionary<uint, ItemWallInstance>();
     private bool _hasClearedFinishedState;
 
-    private sealed class ServerFlight   //투척채간 구별하기 위한 식별 번호
+    private sealed class ServerFlight   // 투척체 구분용
     {
         public uint Id;
         public ItemType Item;
         public double NextSendTime;
         public Action<Vector3> PositionHandler;
+        public bool HasImpactEffect;
+    }
+
+    private sealed class ServerWall
+    {
+        public ItemWallInstance Instance;
+        public Action<ItemWallInstance> RemovedHandler;
     }
 
     public bool IsNetworkActive => this.isClient || this.isServer;
@@ -284,8 +294,8 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
     }
 
     private void OnServerProjectileLaunched(
-    ThrowableProjectile projectile,
-    ThrowableItemDefinition definition)
+        ThrowableProjectile projectile,
+        ThrowableItemDefinition definition)
     {
         this._nextFlightId++;
 
@@ -335,15 +345,15 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
     }
 
     private void OnServerFlightResolved(
-     ThrowableProjectile projectile,
-     TrajectoryEndReason endReason,
-     RaycastHit landingHit,
-     bool canActivateEffect,
-     WallPlacement? placement,
-     Vector4 clipPlane)
+        ThrowableProjectile projectile,
+        TrajectoryEndReason endReason,
+        RaycastHit landingHit,
+        bool canActivateEffect,
+        WallPlacement? placement,
+        Vector4 clipPlane)
     {
         if (!this._serverFlights.TryGetValue(
-                projectile, out ServerFlight flight))
+            projectile, out ServerFlight flight))
         {
             return;
         }
@@ -353,7 +363,7 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
 
         this.RpcEndFlight(flight.Id);
 
-        if (!canActivateEffect)
+        if (!canActivateEffect || !flight.HasImpactEffect)
         {
             return;
         }
@@ -372,7 +382,8 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
             ? placement.Value.Size
             : Vector3.zero;
 
-        this.RpcActivateImpact(
+        this.RpcActivateImpact(     //식별 번호도 전달
+            flight.Id,
             flight.Item,
             landingHit.point,
             landingHit.normal,
@@ -401,24 +412,138 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
         launcher.ImpactActivated += this.OnServerImpactActivated;
     }
 
-    private void OnServerImpactActivated(GameObject effect)
+    private void OnServerImpactActivated(
+        ThrowableProjectile projectile,
+        GameObject effect)
     {
+        if (effect == null)
+        {
+            return;
+        }
+
         this._serverEffects.RemoveAll(existing => existing == null);
         this._serverEffects.Add(effect);
+
+        if (!this._serverFlights.TryGetValue(
+            projectile, out ServerFlight flight))
+        {
+            Debug.LogError("착지 효과의 투척 정보를 찾을 수 없습니다.", this);
+            return;
+        }
+
+        flight.HasImpactEffect = true;
+
+        if (!effect.TryGetComponent(out ItemWallInstance wall)
+            || !wall.IsAuthoritative
+            || wall.IsRemoved)
+        {
+            return;
+        }
+
+        uint wallId = flight.Id;
+
+        Action<ItemWallInstance> removedHandler =
+            removedWall => this.OnServerWallRemoved(wallId, removedWall);
+
+        this._serverWalls.Add(
+            wallId,
+            new ServerWall
+            {
+                Instance = wall,
+                RemovedHandler = removedHandler
+            });
+
+        wall.Removed += removedHandler;
+    }
+
+    // 호스트에서 제거된 벽을 목록에서 정리하고 공유
+    private void OnServerWallRemoved(
+        uint wallId,
+        ItemWallInstance wall)
+    {
+        if (!this._serverWalls.TryGetValue(
+            wallId, out ServerWall registeredWall))
+        {
+            return;
+        }
+
+        this._serverWalls.Remove(wallId);
+
+        if (registeredWall.Instance != null)
+        {
+            registeredWall.Instance.Removed -=
+                registeredWall.RemovedHandler;
+        }
+
+        if (wall != null)
+        {
+            this._serverEffects.Remove(wall.gameObject);
+        }
+
+        if (this.isServer && NetworkServer.active)
+        {
+            this.RpcRemoveWall(wallId);
+        }
+    }
+
+    // 호스트가 제거한 벽을 원격 화면에서도 제거
+    [ClientRpc]
+    private void RpcRemoveWall(uint wallId)
+    {
+        if (this.isServer)
+        {
+            return;
+        }
+
+        if (!this._remoteWalls.TryGetValue(
+            wallId, out ItemWallInstance wall))
+        {
+            return;
+        }
+
+        this._remoteWalls.Remove(wallId);
+
+        if (wall != null)
+        {
+            this._remoteEffects.Remove(wall.gameObject);
+            wall.RemoveFromNetwork();
+        }
     }
 
     private void ClearServerEffects()
     {
-        foreach (GameObject effect in this._serverEffects)
+        // 전체 정리 중에는 개별 벽 제거 알림을 보내지 않음
+        foreach (ServerWall registeredWall in this._serverWalls.Values)
         {
-            if (effect != null)
+            if (registeredWall.Instance != null)
+            {
+                registeredWall.Instance.Removed -=
+                    registeredWall.RemovedHandler;
+            }
+        }
+
+        this._serverWalls.Clear();
+
+        GameObject[] effects = this._serverEffects.ToArray();
+        this._serverEffects.Clear();
+
+        foreach (GameObject effect in effects)
+        {
+            if (effect == null)
+            {
+                continue;
+            }
+
+            if (effect.TryGetComponent(out ItemWallInstance wall))
+            {
+                wall.RemoveFromNetwork();
+            }
+            else
             {
                 effect.SetActive(false);
                 Destroy(effect);
             }
         }
-
-        this._serverEffects.Clear();
     }
 
     private void ClearServerFlights(bool notifyClients)
@@ -487,11 +612,11 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void RpcStartFlight(
-    uint flightId,
-    ItemType item,
-    Vector3 position,
-    float smoothingTime)
+        private void RpcStartFlight(
+        uint flightId,
+        ItemType item,
+        Vector3 position,
+        float smoothingTime)
     {
         // 호스트 화면에는 실제 투척체가 이미 존재
         if (this.isServer || this._remoteFlights.ContainsKey(flightId))
@@ -546,17 +671,18 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
 
     [ClientRpc]
     private void RpcActivateImpact(
-    ItemType item,
-    Vector3 position,
-    Vector3 normal,
-    bool hasWallPlacement,
-    Vector3 groundCenter,
-    Quaternion rotation,
-    Vector3 size,
-    double startedAt,
-    Vector4 clipPlane)
+        uint effectId,
+        ItemType item,
+        Vector3 position,
+        Vector3 normal,
+        bool hasWallPlacement,
+        Vector3 groundCenter,
+        Quaternion rotation,
+        Vector3 size,
+        double startedAt,
+        Vector4 clipPlane)
     {
-        if (this.isServer)
+        if (this.isServer || this._remoteWalls.ContainsKey(effectId))
         {
             return;
         }
@@ -575,7 +701,9 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
         if (hasWallPlacement)
         {
             placement = WallPlacement.FromConfirmed(
-                groundCenter, rotation, size);
+                groundCenter,
+                rotation,
+                size);
         }
 
         float elapsedTime = (float)Math.Max(
@@ -592,23 +720,43 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
         this._remoteEffects.RemoveAll(
             existingEffect => existingEffect == null);
 
-        if (effect != null)
+        if (effect == null)
         {
-            this._remoteEffects.Add(effect);
+            return;
+        }
+
+        this._remoteEffects.Add(effect);
+
+        if (effect.TryGetComponent(out ItemWallInstance wall))
+        {
+            this._remoteWalls.Add(effectId, wall);
         }
     }
 
     private void ClearRemoteEffects()
     {
-        foreach (GameObject effect in this._remoteEffects)
+        this._remoteWalls.Clear();
+
+        GameObject[] effects = this._remoteEffects.ToArray();
+        this._remoteEffects.Clear();
+
+        foreach (GameObject effect in effects)
         {
-            if (effect != null)
+            if (effect == null)
             {
+                continue;
+            }
+
+            if (effect.TryGetComponent(out ItemWallInstance wall))
+            {
+                wall.RemoveFromNetwork();
+            }
+            else
+            {
+                effect.SetActive(false);
                 Destroy(effect);
             }
         }
-
-        this._remoteEffects.Clear();
     }
 
     [ClientRpc]

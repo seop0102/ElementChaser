@@ -16,8 +16,8 @@ public sealed class ThrowableLauncher : MonoBehaviour
     // 투척체, 종료 이유, 착지 정보, 효과 허용 여부, 벽 배치
     public event Action<ThrowableProjectile,TrajectoryEndReason,RaycastHit,bool,WallPlacement?,Vector4> FlightResolved;
 
-    // 실제 생성된 착지 효과
-    public event Action<GameObject> ImpactActivated;
+    // 투척체와 실제 생성된 착지 효과
+    public event Action<ThrowableProjectile, GameObject> ImpactActivated;
 
     public bool TryLaunch(
         ThrowableItemDefinition itemDefinition,
@@ -130,7 +130,7 @@ public sealed class ThrowableLauncher : MonoBehaviour
 
                     if (effect != null)
                     {
-                        this.NotifyImpactActivated(effect);
+                        this.NotifyImpactActivated(projectile, effect);
                     }
                 }
             }
@@ -160,11 +160,11 @@ public sealed class ThrowableLauncher : MonoBehaviour
         this.NotifyProjectileLaunched(projectile, itemDefinition);
         return true;
     }
-    private void NotifyImpactActivated(GameObject effect)
+    private void NotifyImpactActivated(ThrowableProjectile projectile, GameObject effect)
     {
         try
         {
-            this.ImpactActivated?.Invoke(effect);
+            this.ImpactActivated?.Invoke(projectile, effect);
         }
         catch (Exception exception)
         {
@@ -237,13 +237,36 @@ public sealed class ThrowableLauncher : MonoBehaviour
         return prediction;
     }
 
+    // 기존 장애물과 플레이어 마스킹하여  설치 영역 검사
     public bool IsWallPlacementClear(WallPlacement placement)
     {
-        return !Physics.CheckBox(
+        Vector3 halfExtents = placement.Size * 0.5f;
+
+        if (Physics.CheckBox(
             placement.BoxCenter,
-            placement.Size * 0.5f,
+            halfExtents,
             placement.Rotation,
             this._wallPlacementBlockingMask,
+            QueryTriggerInteraction.Ignore))
+        {
+            return false;
+        }
+
+        Collider[] overlaps = Physics.OverlapBox(
+            placement.BoxCenter,
+            halfExtents,
+            placement.Rotation,
+            Physics.AllLayers,
             QueryTriggerInteraction.Ignore);
+
+        foreach (Collider overlap in overlaps)
+        {
+            if (overlap.GetComponentInParent<PlayerRoleSync>() != null)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
