@@ -8,11 +8,23 @@ public class PlayerRoleSync : NetworkBehaviour
     [SerializeField] private Transform angelHalo;
     [SerializeField] private Transform devilHorns;
 
+    [Header("캐릭터 모델")]
+    [SerializeField] private Transform characterModel;
+    [SerializeField] private Renderer bodyRenderer;
+
+    [Header("역할별 머티리얼")]
+    [SerializeField] private Material angelMaterial;
+    [SerializeField] private Material devilMaterial;
+
+    [Header("역할별 크기")]
+    [SerializeField] private float chaserScale = 1.5f;
+
+    private Vector3 originalModelScale;
+
     [SyncVar(hook = nameof(OnRoleChanged))]
     private PlayerRole role = PlayerRole.Runner;
 
     public PlayerRole Role => role;
-
     public bool IsChaser => role == PlayerRole.Chaser;
     public bool IsRunner => role == PlayerRole.Runner;
 
@@ -23,7 +35,11 @@ public class PlayerRoleSync : NetworkBehaviour
 
     private void Awake()
     {
-        // 네트워크 연결 전에도 기본 외형 적용
+        if (characterModel != null)
+        {
+            originalModelScale = characterModel.localScale;
+        }
+
         UpdateAppearance();
     }
 
@@ -47,7 +63,9 @@ public class PlayerRoleSync : NetworkBehaviour
 
     private void OnJailChanged(bool oldValue, bool newValue)
     {
-        Debug.Log($"[감옥 상태 변경] {gameObject.name}: {newValue}");
+        Debug.Log(
+            $"[감옥 상태 변경] {gameObject.name}: {newValue}"
+        );
     }
 
     [Server]
@@ -57,23 +75,43 @@ public class PlayerRoleSync : NetworkBehaviour
         UpdateAppearance();
     }
 
-    private void OnRoleChanged(PlayerRole oldRole, PlayerRole newRole)
+    private void OnRoleChanged(
+        PlayerRole oldRole,
+        PlayerRole newRole)
     {
-        Debug.Log($"[역할 변경] {gameObject.name}: {oldRole} → {newRole}");
+        Debug.Log(
+            $"[역할 변경] {gameObject.name}: {oldRole} → {newRole}"
+        );
+
         UpdateAppearance();
     }
 
     private void UpdateAppearance()
     {
+        // 1. 천사 링 / 악마 뿔
         if (angelHalo != null)
             angelHalo.gameObject.SetActive(IsRunner);
-        else
-            Debug.LogWarning($"[RoleSync] {name}: Angel Halo 미연결");
 
         if (devilHorns != null)
             devilHorns.gameObject.SetActive(IsChaser);
-        else
-            Debug.LogWarning($"[RoleSync] {name}: Devil Horns 미연결");
+
+        // 2. 술래 모델 크기
+        if (characterModel != null)
+        {
+            characterModel.localScale = IsChaser
+                ? originalModelScale * chaserScale
+                : originalModelScale;
+        }
+
+        // 3. 역할별 머티리얼
+        if (bodyRenderer != null)
+        {
+            Material targetMaterial =
+                IsChaser ? devilMaterial : angelMaterial;
+
+            if (targetMaterial != null)
+                bodyRenderer.sharedMaterial = targetMaterial;
+        }
     }
 }
 
