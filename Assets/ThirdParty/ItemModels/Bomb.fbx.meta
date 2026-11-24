@@ -3,7 +3,27 @@ guid: d2fc56fb98f274146a3a93b74ac80e4f
 ModelImporter:
   serializedVersion: 24600
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: BombBody
+    second: {fileID: 2100000, guid: e94220c6f8100e041ab219a8d801ff4b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: BombIndicator
+    second: {fileID: 2100000, guid: 370e7ca3276360d40894bee61ae6d701, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: BombSpike
+    second: {fileID: 2100000, guid: 19c7e21469e3de547a8008bd1c6c4add, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: BombSpikeShade
+    second: {fileID: 2100000, guid: 6879920868487ac499a64a5a29a63eb3, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

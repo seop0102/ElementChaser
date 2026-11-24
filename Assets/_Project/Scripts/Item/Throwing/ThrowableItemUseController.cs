@@ -145,12 +145,14 @@ public sealed class ThrowableItemUseController : MonoBehaviour
             return;
         }
 
+        Func<RaycastHit, bool> isImpactSurface = hit => IsItemImpactSurface(definition.Item, hit);
+
         this.SelectItem(
             definition,
-            this._defaultLandingRadius,
+            definition.ImpactEffect.GetPreviewRadius(this._defaultLandingRadius),
             this._defaultCollisionMask,
-            IsTileTop,
-            IsTileTop);
+            isImpactSurface,
+            isImpactSurface);
     }
     public void SelectItem(
         ThrowableItemDefinition itemDefinition,
@@ -227,8 +229,21 @@ public sealed class ThrowableItemUseController : MonoBehaviour
 
         if (wallSettings == null)
         {
+            float landingRadius = this._landingRadius;
+
+            // 벽 직격은 범위 폭발이 아닌 타격 지점 표시
+            if (this._selectedItem.Item == ItemType.Bomb
+                && prediction.TryGetLandingHit(out RaycastHit impactHit)
+                && IsItemWallHit(impactHit))
+            {
+                landingRadius = 0.08f;
+            }
+
             this._previewRenderer.Show(
-                prediction, canLaunch, this._landingRadius);
+                prediction,
+                canLaunch,
+                landingRadius);
+
             return;
         }
 
@@ -382,17 +397,23 @@ public sealed class ThrowableItemUseController : MonoBehaviour
             || this._launcher == null
             || this._defaultCollisionMask.value == 0)
         {
-            Debug.LogWarning("호스트의 아이템 정의와 투척 설정을 확인하세요.", this);
+            Debug.LogWarning(
+                "호스트의 아이템 정의와 투척 설정을 확인하세요.",
+                this);
+
             return false;
         }
+
+        Func<RaycastHit, bool> isImpactSurface =
+            hit => IsItemImpactSurface(definition.Item, hit);
 
         return this._launcher.TryLaunch(
             definition,
             origin,
             direction,
             this._defaultCollisionMask,
-            IsTileTop,
-            IsTileTop);
+            isImpactSurface,
+            isImpactSurface);
     }
 
     internal void NotifyThrowRequestCompleted(
@@ -434,6 +455,29 @@ public sealed class ThrowableItemUseController : MonoBehaviour
     internal void NotifyHeldItemRequestCompleted(ItemType item, bool isAccepted)
     {
         this.HeldItemRequestCompleted?.Invoke(item, isAccepted);
+    }
+
+    // 폭탄은 설치 벽에서도 비행 종료
+    private static bool IsItemImpactSurface(
+        ItemType item,
+        RaycastHit hit)
+    {
+        return IsTileTop(hit)
+            || (item == ItemType.Bomb && IsItemWallHit(hit));
+    }
+
+    // 충돌한 대상이 설치 벽인지 확인
+    private static bool IsItemWallHit(RaycastHit hit)
+    {
+        if (hit.collider == null)
+        {
+            return false;
+        }
+
+        ItemWallInstance wall =
+            hit.collider.GetComponentInParent<ItemWallInstance>();
+
+        return wall != null && !wall.IsRemoved;
     }
 
     // 현재 맵의 타일 윗면 판정
