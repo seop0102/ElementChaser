@@ -120,12 +120,9 @@ public sealed class ThrowableLauncher : MonoBehaviour
                 {
                     clipPlane = impactEffect.GetClipPlane(landingHit.point);
 
-                    GameObject effect = impactEffect.Activate(
-                        landingHit.point,
-                        landingHit.normal,
+                    GameObject effect = impactEffect.ActivateAtHit(
+                        landingHit,
                         placement,
-                        0f,
-                        true,
                         clipPlane);
 
                     if (effect != null)

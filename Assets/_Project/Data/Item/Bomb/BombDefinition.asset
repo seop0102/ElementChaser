@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cdfcb480b4bcd934898f737c1afb9ff5, type: 3}
+  m_Name: BombDefinition
+  m_EditorClassIdentifier: Assembly-CSharp::ThrowableItemDefinition
+  Item: 6
+  HeldVisualPrefab: {fileID: 8953479522935392758, guid: 8c2a3fc9c63fbe3409b52bbe49313837, type: 3}
+  FlightVisualPrefab: {fileID: 0}
+  ImpactEffect: {fileID: 11400000, guid: 16a1eccfececaea4885f431b107d4fdb, type: 2}
+  WallSettings: {fileID: 0}
+  HeldVisualSize: 0.3
+  HeldVisualOffset: {x: 0, y: 0, z: 0}
+  HeldVisualEulerAngles: {x: 0, y: 0, z: 0}
+  FirstPersonVisualSize: 0.3
+  FirstPersonVisualOffset: {x: 0, y: 0, z: 0}
+  FirstPersonVisualEulerAngles: {x: 0, y: 180, z: 0}

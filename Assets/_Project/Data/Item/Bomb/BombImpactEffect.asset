@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e68d51100c8d8c47b2ab82803765340, type: 3}
+  m_Name: BombImpactEffect
+  m_EditorClassIdentifier: Assembly-CSharp::BombImpactEffect
+  _settings: {fileID: 11400000, guid: 9fc49e23f6d834046b29e57d56c85dfb, type: 2}
+  _explosionPrefab: {fileID: 8531096956817825787, guid: 8f64db6c21068a64496fb6916c55a8fa, type: 3}
+  _wallMask:
+    serializedVersion: 2
+    m_Bits: 128
