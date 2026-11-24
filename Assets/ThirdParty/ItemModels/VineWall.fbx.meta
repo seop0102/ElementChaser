@@ -3,7 +3,27 @@ guid: 8259442a79b39b94dacf2a8ffece8210
 ModelImporter:
   serializedVersion: 24600
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: VineLeaf
+    second: {fileID: 2100000, guid: 32219b39d9eda544e9ae0b9234617eee, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: VineStem
+    second: {fileID: 2100000, guid: 517ccd964d756bf4f844da218bb3ff88, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: VineTip
+    second: {fileID: 2100000, guid: e5f52263c0542e946ab374aebd3b6784, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: VineWrap
+    second: {fileID: 2100000, guid: e7627b694c5b2d04ab39aed801e17256, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
