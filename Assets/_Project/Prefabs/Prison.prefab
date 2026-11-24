@@ -10,6 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 6909374922316324362}
   - component: {fileID: 4803022214512022022}
+  - component: {fileID: -3087694127883877820}
+  - component: {fileID: -5640186017142329765}
   m_Layer: 0
   m_Name: Prison
   m_TagString: Untagged
@@ -54,6 +56,38 @@ MonoBehaviour:
   wallThickness: 0.08
   testSize: {x: 1.5, y: 2.3, z: 1.5}
   testDropDuration: 0.6
+--- !u!114 &-3087694127883877820
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2452824312910708578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 0
+  _assetId: 1655504945
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!114 &-5640186017142329765
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2452824312910708578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e72dd99cb86a9b42ba36d9f9b0cb76c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkPrison
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
 --- !u!1001 &592835659806154443
 PrefabInstance:
   m_ObjectHideFlags: 0
