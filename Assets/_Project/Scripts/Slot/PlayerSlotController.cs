@@ -50,6 +50,8 @@ public class PlayerSlotController : NetworkBehaviour
     // 인벤토리
     private PlayerInventory _inventory;
 
+    private PlayerHealth _health;
+
     public override void OnStartServer()
     {
         base.OnStartServer();
@@ -79,6 +81,7 @@ public class PlayerSlotController : NetworkBehaviour
 
     private void Awake()
     {
+        _health = GetComponent<PlayerHealth>();
         _inventory = GetComponent<PlayerInventory>();
 
         if (_inventory == null)
@@ -161,6 +164,10 @@ public class PlayerSlotController : NetworkBehaviour
     private bool CanRun(GameStateManager game)
     {
         if (_faulted || _role == null || _roller == null)
+            return false;
+
+        // 탈락했거나 체력이 소진된 플레이어는 슬롯을 돌릴 수 없다.
+        if (_health == null || _health.IsDead || _health.CurrentHealth <= 0)
             return false;
 
         if (connectionToClient == null)

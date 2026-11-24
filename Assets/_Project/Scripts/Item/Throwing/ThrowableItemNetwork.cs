@@ -59,12 +59,14 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
 
     public bool IsNetworkActive => this.isClient || this.isServer;
 
+    // 서버가 장착·투척 가능 여부를 최종 판정한다.
     private bool CanHoldItem =>
         this._playerRole != null
         && this._playerRole.IsRunner
         && !this._playerRole.IsJailed
         && this._playerHealth != null
         && !this._playerHealth.IsDead
+        && this._playerHealth.CurrentHealth > 0
         && GameStateManager.Instance != null
         && GameStateManager.Instance.CurrentPhase == GamePhase.Playing;
 

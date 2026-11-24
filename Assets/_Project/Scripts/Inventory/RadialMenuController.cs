@@ -59,6 +59,16 @@ public class RadialMenuController : MonoBehaviour
     private void Update()
     {
         TryConnectInventory();
+
+        // 메뉴를 연 채 감금되어도 선택을 확정하지 않고 닫는다.
+        if (!CanUseItemMenu())
+        {
+            if (isOpen)
+                CloseMenu(false);
+
+            return;
+        }
+
         if (Keyboard.current == null)
             return;
 
@@ -328,5 +338,31 @@ public class RadialMenuController : MonoBehaviour
         {
             playerInventory.InventoryChanged -= RefreshItemCounts;
         }
+    }
+
+    private bool CanUseItemMenu()
+    {
+        NetworkIdentity player = NetworkClient.localPlayer;
+
+        if (player == null)
+            return false;
+
+        PlayerHealth health = player.GetComponent<PlayerHealth>();
+        PlayerRoleSync role = player.GetComponent<PlayerRoleSync>();
+        PlayerPrison prison = player.GetComponent<PlayerPrison>();
+
+        GameStateManager game = GameStateManager.Instance;
+
+        // 감금·탈락·체력 소진 상태에서는 메뉴를 사용할 수 없다.
+        return health != null
+            && !health.IsDead
+            && health.CurrentHealth > 0
+            && role != null
+            && role.IsRunner
+            && !role.IsJailed
+            && prison != null
+            && !prison.IsJailed
+            && game != null
+            && game.CurrentPhase == GamePhase.Playing;
     }
 }
