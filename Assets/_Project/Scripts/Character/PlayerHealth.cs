@@ -212,4 +212,17 @@ private void RpcPlayHitFlash()
     }
 }
 
+    // 감금 시간이 끝났을 때 서버가 완전 탈락 처리한다.
+    [Server]
+    public void ServerEliminate()
+    {
+        if (isDead)
+            return;
+
+        currentHealth = 0;
+        isDead = true;
+
+        Debug.Log($"[Eliminate] Player {netId} 완전 탈락");
+    }
+
 }

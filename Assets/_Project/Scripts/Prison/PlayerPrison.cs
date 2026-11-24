@@ -317,4 +317,18 @@ public class PlayerPrison : NetworkBehaviour
 
         return targetPosition;
     }
+
+    // 전달된 감옥에 갇혀 있는 플레이어만 탈락시킨다.
+    [Server]
+    public void ServerEliminateFromPrison(uint expiredPrisonId)
+    {
+        if (!IsJailed || prisonNetId != expiredPrisonId)
+            return;
+
+        // 먼저 탈락시키고 감금 연결을 해제한다.
+        health.ServerEliminate();
+
+        prisonNetId = 0;
+        role.SetJailed(false);
+    }
 }
