@@ -207,21 +207,24 @@ public class GameStateManager : NetworkBehaviour
         if (isInterrupted || currentPhase != GamePhase.Playing)
             return;
 
-        // 1. 제한 시간 종료
+        // 1. 감금 시간이 끝난 플레이어를 탈락시킨다.
+        UpdatePrisonTimers();
+
+        // 2. 자유로운 생존 도망자가 남아 있는지 확인한다.
+        CheckChaserWin();
+
+        // 술래 승리로 끝났으면 아래 시간 종료 처리를 실행하지 않는다.
+        if (currentPhase != GamePhase.Playing)
+            return;
+
+        // 3. 전체 시간이 끝날 때까지 버텼으면 도망자 측 승리다.
         if (NetworkTime.time >= gameEndTime)
         {
-            Debug.Log("[GameState] 제한 시간 종료");
-
-            // 시간 종료 시 생존 도망자 승리
+            Debug.Log("[GameState] 전체 시간 종료 - 도망자 승리");
             FinishGame(false);
-            return;
         }
-
-        // 2. 도망자가 모두 술래가 되었는지 확인
-        CheckChaserWin();
     }
 
-    // 도망자가 모두 술래가 되었는지 검사
     [Server]
     private void CheckChaserWin()
     {
@@ -233,24 +236,52 @@ public class GameStateManager : NetworkBehaviour
                 FindObjectsSortMode.None
             );
 
-        // 현재 1인 테스트 시 자동 종료 방지
-        // 실제 4인 게임의 중도 퇴장 처리는 추후 구현
-        if (players.Length < 4)
+        // 술래 없이 도망자 혼자 진행하는 테스트에서는
+        // 전원 감금 승리 판정을 생략해 타이머를 확인할 수 있게 한다.
+        bool hasChaser = players.Any(player => player.IsChaser);
+
+        if (!hasChaser)
             return;
+
+        bool hasRunner = false;
 
         foreach (PlayerRoleSync player in players)
         {
-            // Runner가 한 명이라도 남아 있으면 계속 진행
-            // 감옥에 있는 Runner도 아직 Runner로 취급
-            if (player.IsRunner)
+            if (!player.IsRunner)
+                continue;
+
+            hasRunner = true;
+
+            PlayerHealth health =
+                player.GetComponent<PlayerHealth>();
+
+            // 필수 컴포넌트가 빠진 경우 잘못된 승리 처리를 막는다.
+            if (health == null)
+            {
+                Debug.LogError(
+                    "[GameState] 도망자에게 PlayerHealth가 없습니다.",
+                    player
+                );
+                return;
+            }
+
+            // 이미 탈락한 사람은 생존자 검사에서 제외한다.
+            if (health.IsDead)
+                continue;
+
+            // 자유로운 생존 도망자가 한 명이라도 있으면 계속 진행한다.
+            if (!player.IsJailed)
                 return;
         }
 
+        // 도망자 자체가 없는 테스트 상황에서는 종료하지 않는다.
+        if (!hasRunner)
+            return;
+
         Debug.Log(
-            "[GameState] 모든 도망자가 술래로 전환됨"
+            "[GameState] 자유로운 생존 도망자 없음 - 술래 승리"
         );
 
-        // 최초 술래 승리
         FinishGame(true);
     }
 
@@ -298,8 +329,10 @@ public class GameStateManager : NetworkBehaviour
             if (!role.IsRunner)
                 continue;
 
-            // 감옥에 있는 플레이어는 제외
-            if (role.IsJailed)
+            PlayerHealth health = player.GetComponent<PlayerHealth>();
+
+            // 전체 시간 종료 시에는 완전히 탈락한 도망자를 제외한다.
+            if (health != null && health.IsDead)
                 continue;
 
             if (names != "")
@@ -387,5 +420,25 @@ public class GameStateManager : NetworkBehaviour
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+    }
+
+    [Server]
+    private void UpdatePrisonTimers()
+    {
+        // 감옥이 제거되어도 안전하게 순회하도록 목록을 복사한다.
+        NetworkIdentity[] identities =
+            NetworkServer.spawned.Values.ToArray();
+
+        foreach (NetworkIdentity identity in identities)
+        {
+            if (identity == null)
+                continue;
+
+            NetworkPrison prison =
+                identity.GetComponent<NetworkPrison>();
+
+            if (prison != null)
+                prison.ServerCheckExpiration(gameEndTime);
+        }
     }
 }
