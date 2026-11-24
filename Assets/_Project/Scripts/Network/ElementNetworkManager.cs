@@ -26,7 +26,12 @@ public class ElementNetworkManager : NetworkManager
     private bool isShuttingDown = false;
     private bool gameStartRequested = false; 
     private Coroutine startupWatchdog;
-    
+    private Coroutine mapVoteWatchdog;
+
+    private readonly HashSet<int> matchConnections = new();
+
+    public int SelectedMapIndex { get; private set; } = -1;
+    public int SelectedMapSeed { get; private set; }
     public void BeginShutdown()
     {
         isShuttingDown = true;
@@ -165,7 +170,19 @@ public class ElementNetworkManager : NetworkManager
             return;
         }
 
-        gameStartRequested = true; // 추가
+        gameStartRequested = true;
+        matchConnections.Clear();
+
+        foreach (var conn in NetworkServer.connections.Values)
+        {
+            if (conn != null && conn.identity != null)
+            {
+                matchConnections.Add(conn.connectionId);
+            }
+        }
+
+        SelectedMapIndex = -1;
+        SelectedMapSeed = 0;
 
         returningToLobby = false;
 
@@ -181,16 +198,127 @@ public class ElementNetworkManager : NetworkManager
             StopCoroutine(startupWatchdog);
             startupWatchdog = null;
         }
-
-// 게임 시작 과정 감시 시작
-        startupWatchdog = StartCoroutine(WatchGameStartup());
-
-// 게임 시작 후 로비 신규 참가 제한
         SteamLobbyManager.Instance?.LockLobby();
 
-// 모든 클라이언트를 게임 씬으로 이동
-        ServerChangeScene("GameScene");
+        if (mapVoteWatchdog != null)
+        {
+            StopCoroutine(mapVoteWatchdog);
+            mapVoteWatchdog = null;
+        }
 
+        mapVoteWatchdog = StartCoroutine(WatchMapVoting());
+
+        ServerChangeScene("ChooseMap");
+
+    }
+    [Server]
+    private IEnumerator WatchMapVoting()
+    {
+        float deadline = Time.realtimeSinceStartup + 120f;
+
+        yield return null;
+
+        while (NetworkServer.active &&
+               !returningToLobby &&
+               !isShuttingDown &&
+               gameStartRequested)
+        {
+            bool allConnected =
+                matchConnections.Count == RequiredPlayerCount &&
+                matchConnections.All(id =>
+                    NetworkServer.connections.ContainsKey(id));
+
+            if (!allConnected)
+            {
+                Debug.LogError("[MapVote] 참가자 연결 유실");
+
+                mapVoteWatchdog = null;
+
+                SteamLobbyManager.Instance?.LeaveLobby();
+
+                yield break;
+            }
+
+            if (Time.realtimeSinceStartup >= deadline)
+            {
+                Debug.LogError("[MapVote] 투표 준비 시간 초과");
+
+                mapVoteWatchdog = null;
+
+                SteamLobbyManager.Instance?.LeaveLobby();
+
+                yield break;
+            }
+
+            yield return new WaitForSecondsRealtime(0.5f);
+        }
+
+        mapVoteWatchdog = null;
+    }
+    [Server]
+    public void StartSelectedMap(int mapIndex)
+    {
+        if (!NetworkServer.active ||
+            returningToLobby ||
+            isShuttingDown ||
+            !gameStartRequested)
+            return;
+
+        if (SceneManager.GetActiveScene().name != "ChooseMap")
+            return;
+
+        if (mapIndex < 0 || mapIndex > 2)
+            return;
+
+        if (SelectedMapIndex != -1)
+            return;
+
+        bool allPlayersReady =
+            matchConnections.Count == RequiredPlayerCount &&
+            NetworkServer.connections.Count == RequiredPlayerCount &&
+            NetworkServer.connections.Values.All(conn =>
+                conn != null &&
+                conn.isReady &&
+                conn.identity != null &&
+                matchConnections.Contains(conn.connectionId));
+
+        if (!allPlayersReady)
+        {
+            Debug.LogError("[MapVote] 참가자 준비 실패");
+
+            returningToLobby = true;
+            StartCoroutine(CancelMapVotingRoutine());
+
+            return;
+        }
+
+        SelectedMapIndex = mapIndex;
+        SelectedMapSeed = Random.Range(1, int.MaxValue);
+
+        if (mapVoteWatchdog != null)
+        {
+            StopCoroutine(mapVoteWatchdog);
+            mapVoteWatchdog = null;
+        }
+
+        loadedPlayers.Clear();
+        spawnedPlayers.Clear();
+        spawnStarted = false;
+
+        if (startupWatchdog != null)
+        {
+            StopCoroutine(startupWatchdog);
+            startupWatchdog = null;
+        }
+
+        Debug.Log(
+            $"[MapVote] Map={SelectedMapIndex}, " +
+            $"Seed={SelectedMapSeed}"
+        );
+
+        startupWatchdog = StartCoroutine(WatchGameStartup());
+
+        ServerChangeScene("GameScene");
     }
     
 [Server]
@@ -549,7 +677,10 @@ private IEnumerator WatchGameStartup()
 
         loadedPlayers.Clear();
         spawnedPlayers.Clear();
+        matchConnections.Clear();
 
+        SelectedMapIndex = -1;
+        SelectedMapSeed = 0;
         NetworkServer.RegisterHandler<LobbyCountRequestMessage>(
             OnLobbyCountRequested
         );
@@ -566,7 +697,16 @@ private IEnumerator WatchGameStartup()
             StopCoroutine(startupWatchdog);
             startupWatchdog = null;
         }
-        
+        if (mapVoteWatchdog != null)
+        {
+            StopCoroutine(mapVoteWatchdog);
+            mapVoteWatchdog = null;
+        }
+
+        matchConnections.Clear();
+
+        SelectedMapIndex = -1;
+        SelectedMapSeed = 0;
         loadedPlayers.Clear();
         spawnedPlayers.Clear();
 
@@ -588,10 +728,20 @@ private IEnumerator WatchGameStartup()
             SceneManager.GetActiveScene().name == "GameScene";
 
         bool wasRegisteredPlayer = conn.identity != null;
+        bool wasMatchPlayer =
+            matchConnections.Contains(conn.connectionId);
 
+        matchConnections.Remove(conn.connectionId);
+
+        bool shouldCancelVoting =
+            gameStartRequested &&
+            wasMatchPlayer &&
+            !wasInGame &&
+            !returningToLobby &&
+            !isShuttingDown;
         bool shouldReturn =
             wasInGame &&
-            wasRegisteredPlayer &&
+            (wasRegisteredPlayer || wasMatchPlayer) &&
             !returningToLobby &&
             !isShuttingDown;
         
@@ -602,7 +752,17 @@ private IEnumerator WatchGameStartup()
             spawnedPlayers.Remove(conn.identity.netId);
         }
         base.OnServerDisconnect(conn);
+        if (shouldCancelVoting)
+        {
+            returningToLobby = true;
 
+            Debug.LogWarning(
+                "[MapVote] 참가자 이탈로 게임 시작 취소"
+            );
+
+            StartCoroutine(CancelMapVotingRoutine());
+            return;
+        }
         // 퇴장 중인 연결은 제외하고 인원수 전달
         if (NetworkServer.active &&
             SceneManager.GetActiveScene().name == "MainMenu")
@@ -711,5 +871,19 @@ private IEnumerator WatchGameStartup()
             StopHost();
         }
     }
+    private IEnumerator CancelMapVotingRoutine()
+    {
+        yield return null;
 
+        if (!NetworkServer.active || isShuttingDown)
+            yield break;
+
+        SteamLobbyManager lobby =
+            SteamLobbyManager.Instance;
+
+        if (lobby != null)
+            lobby.LeaveLobby();
+        else
+            StopHost();
+    }
 }
