@@ -22,4 +22,4 @@ MonoBehaviour:
   HeldVisualEulerAngles: {x: 0, y: 0, z: 0}
   FirstPersonVisualSize: 0.3
   FirstPersonVisualOffset: {x: 0, y: 0, z: 0}
-  FirstPersonVisualEulerAngles: {x: 0, y: 0, z: 0}
+  FirstPersonVisualEulerAngles: {x: 0, y: 180, z: 0}
