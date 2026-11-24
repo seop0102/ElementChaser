@@ -3,7 +3,22 @@ guid: c07d14de53f77994c86363d0b74456bb
 ModelImporter:
   serializedVersion: 24600
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WaterBody
+    second: {fileID: 2100000, guid: 7ea3810917f0c1b4bb1121fd294405ac, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WaterCrest
+    second: {fileID: 2100000, guid: e008fe9d4101b494093ec192e6154698, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WaterFoam
+    second: {fileID: 2100000, guid: a3d884bcac2277c4eab2cd3dd0dc5052, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

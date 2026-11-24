@@ -1739,6 +1739,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6fb52e9febc3e2f4eb10fc6289e4d196, type: 2}
   - {fileID: 11400000, guid: 24b48d5ece6fbb842960a5709390d340, type: 2}
   - {fileID: 11400000, guid: ec867b17c1197f6498d97408c2d768b8, type: 2}
+  - {fileID: 11400000, guid: a531018dcb81e6e43832cf3c342f838a, type: 2}
   _defaultCollisionMask:
     serializedVersion: 2
     m_Bits: 192
