@@ -59,8 +59,6 @@ public class MainMenuUI : MonoBehaviour
             return;
         }
 
-        _createRoomButton.interactable = false;
-
         lobbyManager.CreateLobby();
     }
 
