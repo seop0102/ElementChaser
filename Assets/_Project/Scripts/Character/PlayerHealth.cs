@@ -9,7 +9,12 @@ public class PlayerHealth : NetworkBehaviour
     [SerializeField] private Transform characterModel;
     [SerializeField] private float deathGroundOffset = 0f;
 
-private Vector3 originalModelLocalPosition;
+    // 무적 종료 시각은 서버에서만 판정한다.
+    private double invincibleUntil;
+
+    // 실제 피해를 받은 횟수. 구조 중 피격 여부를 확인한다.
+    public uint DamageVersion { get; private set; }
+    private Vector3 originalModelLocalPosition;
 
     [SyncVar(hook = nameof(OnHealthChanged))]
     private int currentHealth;
@@ -81,6 +86,10 @@ private void TargetPlayHitEffect(
         if (damage <= 0 || isDead || currentHealth <= 0)
             return;
 
+        // 구조 직후 무적 중에는 피해를 받지 않는다.
+        if (NetworkTime.time < invincibleUntil)
+            return;
+
         PlayerRoleSync role = GetComponent<PlayerRoleSync>();
         PlayerPrison prison = GetComponent<PlayerPrison>();
 
@@ -104,6 +113,9 @@ private void TargetPlayHitEffect(
 
         int oldHealth = currentHealth;
         currentHealth = Mathf.Max(0, currentHealth - damage);
+
+        // 감금·무적 검사까지 통과한 실제 피격만 기록한다.
+        DamageVersion++;
 
         Debug.Log(
             $"[피격] {name} 체력 {oldHealth} → {currentHealth}"
@@ -225,4 +237,14 @@ private void RpcPlayHitFlash()
         Debug.Log($"[Eliminate] Player {netId} 완전 탈락");
     }
 
+    [Server]
+    public void ServerRecoverFromPrison()
+    {
+        // 완전히 탈락한 플레이어는 구조로 되살리지 않는다.
+        if (isDead)
+            return;
+
+        currentHealth = Mathf.Clamp(2, 1, maxHealth);
+        invincibleUntil = NetworkTime.time + 2d;
+    }
 }

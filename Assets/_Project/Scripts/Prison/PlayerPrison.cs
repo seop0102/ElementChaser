@@ -331,4 +331,23 @@ public class PlayerPrison : NetworkBehaviour
         prisonNetId = 0;
         role.SetJailed(false);
     }
+    [Server]
+    public void ServerReleaseFromPrison(uint rescuedPrisonId)
+    {
+        // 구조된 감옥에 갇힌 생존자만 해방한다.
+        if (!IsJailed ||
+            prisonNetId != rescuedPrisonId ||
+            health.IsDead)
+        {
+            return;
+        }
+
+        health.ServerRecoverFromPrison();
+
+        // 이동 범위 제한과 역할의 감금 상태를 함께 해제한다.
+        prisonNetId = 0;
+        role.SetJailed(false);
+
+        Debug.Log($"[Prison] Player {netId} 구조 완료");
+    }
 }
