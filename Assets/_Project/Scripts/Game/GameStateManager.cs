@@ -29,6 +29,10 @@ public class GameStateManager : NetworkBehaviour
     [SyncVar]
     private string winnerNames = "";
 
+    // 술래 승리 여부
+    [SyncVar]
+    private bool chaserWon = false;
+    
     // 게임 시작 카운트다운
     [SyncVar]
     private int countdown = 3;
@@ -50,6 +54,7 @@ public class GameStateManager : NetworkBehaviour
     public uint ChaserNetId => chaserNetId;
     public int Countdown => countdown;
     public string WinnerNames => winnerNames;
+    public bool ChaserWon => chaserWon;
 
     // 남은 게임 시간
     public double RemainingTime =>
@@ -76,6 +81,7 @@ public class GameStateManager : NetworkBehaviour
         currentPhase = GamePhase.Waiting;
         chaserNetId = 0;
         winnerNames = "";
+        chaserWon = false;
         countdown = 3;
         gameEndTime = 0;
         isStarting = false;
@@ -316,18 +322,19 @@ public class GameStateManager : NetworkBehaviour
         return names;
     }
 
-    // 게임 종료
     [Server]
     private void FinishGame(bool chaserWon)
     {
-        // 중복 종료 방지
         if (currentPhase != GamePhase.Playing)
             return;
 
-        // 서버에서 승리자 결정
+        // 승리 팀 저장
+        this.chaserWon = chaserWon;
+
+        // 승리자 닉네임 저장
         winnerNames = GetWinnerNames(chaserWon);
 
-        // 모든 클라이언트에 종료 상태 동기화
+        // 게임 종료 상태 동기화
         currentPhase = GamePhase.Finished;
 
         Debug.Log(
