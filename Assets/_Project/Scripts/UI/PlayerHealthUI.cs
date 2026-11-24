@@ -1,41 +1,45 @@
 using Mirror;
-using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerHealthUI : MonoBehaviour
 {
-    [SerializeField] private TMP_Text healthText;
+    [Header("Heart Images")]
+    [SerializeField] private Image[] heartImages;
+
+    [Header("Heart Sprites")]
+    [SerializeField] private Sprite fullHeart;
+    [SerializeField] private Sprite emptyHeart;
 
     private void Update()
     {
-        if (healthText == null)
-            return;
+        PlayerHealth health = null;
 
-        if (!NetworkClient.active ||
-            NetworkClient.localPlayer == null)
+        if (NetworkClient.active &&
+            NetworkClient.localPlayer != null)
         {
-            healthText.text = "";
-            return;
+            health = NetworkClient.localPlayer
+                .GetComponent<PlayerHealth>();
         }
 
-        PlayerHealth health =
-            NetworkClient.localPlayer.GetComponent<PlayerHealth>();
-
-        if (health == null)
+        for (int i = 0; i < heartImages.Length; i++)
         {
-            healthText.text = "";
-            return;
+            Image heart = heartImages[i];
+
+            if (heart == null)
+                continue;
+
+            bool visible =
+                health != null && i < health.MaxHealth;
+
+            heart.gameObject.SetActive(visible);
+
+            if (!visible)
+                continue;
+
+            heart.sprite = i < health.CurrentHealth
+                ? fullHeart
+                : emptyHeart;
         }
-
-        string hearts = "";
-
-        for (int i = 0; i < health.MaxHealth; i++)
-        {
-            hearts += i < health.CurrentHealth
-                ? "<color=#FF6666>♥</color>"
-                : "<color=#777777>♡</color>";
-        }
-
-        healthText.text = hearts;
     }
 }

@@ -4,6 +4,7 @@ using UnityEngine;
 public class ResultUI : MonoBehaviour
 {
     [SerializeField] private GameObject resultPanel;
+    [SerializeField] private TMP_Text resultTitleText;
     [SerializeField] private TMP_Text winnerNamesText;
 
     private bool wasFinished = false;
@@ -25,10 +26,19 @@ public class ResultUI : MonoBehaviour
             resultPanel.SetActive(finished);
         }
 
-        if (finished && winnerNamesText != null)
+        if (finished)
         {
-            winnerNamesText.text =
-                "WINNER\n\n" + gameState.WinnerNames;
+            if (resultTitleText != null)
+            {
+                resultTitleText.text = gameState.ChaserWon
+                    ? "Chaser Win!"
+                    : "Runner Win!";
+            }
+
+            if (winnerNamesText != null)
+            {
+                winnerNamesText.text = gameState.WinnerNames;
+            }
         }
 
         // 게임이 종료되는 순간 한 번 실행

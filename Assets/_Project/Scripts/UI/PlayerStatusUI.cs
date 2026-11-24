@@ -1,69 +1,89 @@
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerStatusUI : MonoBehaviour
 {
-    [SerializeField] private TMP_Text playerStatusText;
+    [Header("Player Slots")]
+    [SerializeField] private Image[] playerBackgrounds;
+    [SerializeField] private TMP_Text[] playerNames;
+
+    [Header("Role Colors")]
+    [SerializeField] private Color runnerColor =
+        new Color32(195, 73, 73, 255);
+
+    [SerializeField] private Color chaserColor =
+        new Color32(50, 131, 77, 255);
+
+    [SerializeField] private Color jailColor =
+        new Color32(116, 119, 128, 255);
+
+    [SerializeField] private Color waitingColor =
+        new Color32(60, 60, 60, 255);
 
     private void Update()
     {
-        if (playerStatusText == null)
+        if (playerBackgrounds == null ||
+            playerNames == null)
             return;
-
-        GameStateManager gameState = GameStateManager.Instance;
-
-        if (gameState == null)
-        {
-            playerStatusText.text = "";
-            return;
-        }
 
         NetworkPlayer[] players =
             FindObjectsByType<NetworkPlayer>(
-                    FindObjectsSortMode.None
-                )
-                .OrderBy(p => p.netId)
-                .ToArray();
+                FindObjectsSortMode.None
+            )
+            .OrderBy(p => p.netId)
+            .ToArray();
 
-        string result = "";
+        int slotCount = Mathf.Min(
+            playerBackgrounds.Length,
+            playerNames.Length
+        );
 
-        foreach (NetworkPlayer player in players)
+        for (int i = 0; i < slotCount; i++)
         {
+            Image background = playerBackgrounds[i];
+            TMP_Text nameText = playerNames[i];
+
+            if (background == null || nameText == null)
+                continue;
+
+            if (GameStateManager.Instance == null ||
+                i >= players.Length)
+            {
+                nameText.text = "Waiting...";
+                background.color = waitingColor;
+                continue;
+            }
+
+            NetworkPlayer player = players[i];
+
             PlayerRoleSync roleSync =
                 player.GetComponent<PlayerRoleSync>();
 
-            if (roleSync == null)
-                continue;
-
-            string playerName =
+            nameText.text =
                 string.IsNullOrWhiteSpace(player.SteamName)
                     ? "Connecting..."
                     : player.SteamName;
 
-            string status;
+            if (roleSync == null)
+            {
+                background.color = waitingColor;
+                continue;
+            }
 
             if (roleSync.IsJailed)
             {
-                status = "<color=#FFCC66>JAIL</color>";
+                background.color = jailColor;
             }
             else if (roleSync.IsChaser)
             {
-                status = "<color=#FF6666>CHASER</color>";
+                background.color = chaserColor;
             }
             else
             {
-                status = "<color=#66FF99>RUNNER</color>";
+                background.color = runnerColor;
             }
-
-            result += $"{playerName}  -  {status}\n";
         }
-
-        for (int i = players.Length; i < 4; i++)
-        {
-            result += "Waiting...  -  ---\n";
-        }
-
-        playerStatusText.text = result;
     }
 }
