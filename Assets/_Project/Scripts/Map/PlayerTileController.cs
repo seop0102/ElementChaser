@@ -1,4 +1,4 @@
-
+    
 using Mirror;
 using UnityEngine;
 
@@ -167,7 +167,8 @@ public class PlayerTileController : NetworkBehaviour
     }
 
     // 특정 위치 아래에 있는 타일 감지
-    private Tile GetTileAtPosition(Vector3 position)
+    // 다른 시스템에서도 해당 위치의 타일을 조회할 수 있게 한다.
+    public Tile GetTileAtPosition(Vector3 position)
     {
         Vector3 origin = position + Vector3.up * 0.5f;
 

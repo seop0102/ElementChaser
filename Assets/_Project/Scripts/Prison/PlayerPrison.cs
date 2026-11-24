@@ -10,8 +10,7 @@ public class PlayerPrison : NetworkBehaviour
     [Header("감옥 프리팹")]
     [SerializeField] private PrisonCage cagePrefab;
 
-    [Header("감옥 크기")]
-    [SerializeField, Min(1.1f)] private float widthMultiplier = 1.5f;
+    [Header("감옥 높이")]
     [SerializeField, Min(1.1f)] private float heightMultiplier = 1.15f;
 
     [Header("낙하 시간")]
@@ -29,6 +28,9 @@ public class PlayerPrison : NetworkBehaviour
     private PlayerRoleSync role;
     private CharacterController controller;
 
+    // 플레이어가 서 있는 타일을 찾는 기존 컴포넌트다.
+    private PlayerTileController tileController;
+
     // 감옥 외형은 각 컴퓨터에서 하나씩 생성한다.
     private PrisonCage currentCage;
 
@@ -45,6 +47,9 @@ public class PlayerPrison : NetworkBehaviour
         health = GetComponent<PlayerHealth>();
         role = GetComponent<PlayerRoleSync>();
         controller = GetComponent<CharacterController>();
+
+        // 같은 플레이어에 붙은 타일 조회 기능을 가져온다.
+        tileController = GetComponent<PlayerTileController>();
     }
 
     [Server]
@@ -60,24 +65,43 @@ public class PlayerPrison : NetworkBehaviour
             return;
         }
 
-        Bounds bounds = controller.bounds;
+        // 기존 타일 조회 기능으로 현재 위치의 타일을 찾는다.
+        Tile currentTile = tileController != null
+            ? tileController.GetTileAtPosition(transform.position)
+            : null;
 
-        // 플레이어의 발밑을 감옥 바닥 중심으로 사용한다.
+        BoxCollider tileCollider = currentTile != null
+            ? currentTile.GetComponent<BoxCollider>()
+            : null;
+
+        if (tileCollider == null)
+        {
+            Debug.LogError(
+                "[Prison] 현재 타일을 찾지 못했습니다. " +
+                "PlayerTileController의 Tile Layer와 타일의 BoxCollider를 확인해 주세요.",
+                this
+            );
+            return;
+        }
+
+        Bounds playerBounds = controller.bounds;
+        Bounds tileBounds = tileCollider.bounds;
+
+        // 타일 윗면의 중앙을 감옥 바닥 중심으로 사용한다.
         cagePosition = new Vector3(
-            bounds.center.x,
-            bounds.min.y,
-            bounds.center.z
+            tileBounds.center.x,
+            tileBounds.max.y,
+            tileBounds.center.z
         );
 
+        // 낙하 중에는 플레이어를 원래 잡힌 위치에 고정한다.
         capturedPosition = transform.position;
 
-        float width =
-            Mathf.Max(bounds.size.x, bounds.size.z) * widthMultiplier;
-
+        // 가로·세로는 타일 크기, 높이는 플레이어 크기로 설정한다.
         cageSize = new Vector3(
-            width,
-            bounds.size.y * heightMultiplier,
-            width
+            tileBounds.size.x,
+            playerBounds.size.y * heightMultiplier,
+            tileBounds.size.z
         );
 
         syncedDropDuration = dropDuration;
