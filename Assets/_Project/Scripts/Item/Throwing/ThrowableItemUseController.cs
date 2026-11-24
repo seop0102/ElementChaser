@@ -37,7 +37,7 @@ public sealed class ThrowableItemUseController : MonoBehaviour
     // 요청한 아이템과 호스트의 장착 승인 여부
     public event Action<ItemType, bool> HeldItemRequestCompleted;
 
-    // 요청자에게 전달하는 실제 발사 결과
+    // 요청자에게 전달하는 실제 사ㅣ용 결과
     public event Action<ItemType, bool> ThrowRequestCompleted;
 
     internal LayerMask ThrowCollisionMask => this._defaultCollisionMask;
@@ -56,11 +56,10 @@ public sealed class ThrowableItemUseController : MonoBehaviour
         }
 
         // 인벤토리 보유 확인 및 사용 결과 처리 연결
-        this.SetInventoryHandlers(
-            item => this._inventory.GetItemCount(item) > 0,
-            (item, hasLaunched) =>
+        this.SetInventoryHandlers(item => this._inventory.GetItemCount(item) > 0,
+            (item, hasUsed) =>
             {
-                if (hasLaunched)
+                if (hasUsed)
                 {
                     this._inventory.TryUseItem(item);
                 }
@@ -112,30 +111,37 @@ public sealed class ThrowableItemUseController : MonoBehaviour
             return;
         }
 
-        //연결 오류
         ThrowableItemDefinition definition = this.FindDefinition(item);
 
         if (definition == null)
         {
-            Debug.LogWarning($"장착할 아이템 정의를 확인하세요: {item}", this);
+            Debug.LogWarning($"장착할 아이템 정의를 확인하세요: {item}",this);
             return;
         }
 
-        if (definition.ImpactEffect == null)
+        if (!definition.HasUseEffect)
         {
-            Debug.LogWarning($"아이템의 착지 효과를 연결하세요: {item}", this);
+            Debug.LogWarning($"아이템의 사용 설정을 연결하세요: {item}",this);
+            return;
+        }
+
+        if (definition.HeldVisualPrefab != null
+            && this._heldVisual == null)
+        {
+            Debug.LogWarning("장착 외형 표시 컴포넌트를 연결하세요.",this);
+            return;
+        }
+
+        // 투명화는 외형만 장착하고 투척 판정은 사용하지 않음
+        if (!definition.IsThrowable)
+        {
+            this.SelectItem(definition, 0f, default, null, null);
             return;
         }
 
         if (this._launcher == null || this._previewRenderer == null)
         {
-            Debug.LogWarning("투척 런처와 미리보기 표시를 연결하세요.", this);
-            return;
-        }
-
-        if (definition.HeldVisualPrefab != null && this._heldVisual == null)
-        {
-            Debug.LogWarning("장착 외형 표시 컴포넌트를 연결하세요.", this);
+            Debug.LogWarning("투척 런처와 미리보기 표시를 연결하세요.",this);
             return;
         }
 
@@ -145,7 +151,8 @@ public sealed class ThrowableItemUseController : MonoBehaviour
             return;
         }
 
-        Func<RaycastHit, bool> isImpactSurface = hit => IsItemImpactSurface(definition.Item, hit);
+        Func<RaycastHit, bool> isImpactSurface =
+            hit => IsItemImpactSurface(definition.Item, hit);
 
         this.SelectItem(
             definition,
@@ -154,6 +161,7 @@ public sealed class ThrowableItemUseController : MonoBehaviour
             isImpactSurface,
             isImpactSurface);
     }
+
     public void SelectItem(
         ThrowableItemDefinition itemDefinition,
         float landingRadius,
@@ -166,14 +174,17 @@ public sealed class ThrowableItemUseController : MonoBehaviour
             throw new ArgumentNullException(nameof(itemDefinition));
         }
 
-        if (isLandingSurface == null)
+        if (itemDefinition.IsThrowable)
         {
-            throw new ArgumentNullException(nameof(isLandingSurface));
-        }
+            if (isLandingSurface == null)
+            {
+                throw new ArgumentNullException(nameof(isLandingSurface));
+            }
 
-        if (canUseAtLanding == null)
-        {
-            throw new ArgumentNullException(nameof(canUseAtLanding));
+            if (canUseAtLanding == null)
+            {
+                throw new ArgumentNullException(nameof(canUseAtLanding));
+            }
         }
 
         if (itemDefinition.HeldVisualPrefab != null
@@ -214,6 +225,14 @@ public sealed class ThrowableItemUseController : MonoBehaviour
     {
         if (!this.HasSelection)
         {
+            return;
+        }
+        if (!this._selectedItem.IsThrowable)
+        {
+            if (this._previewRenderer != null)
+            {
+                this._previewRenderer.Hide();
+            }
             return;
         }
 
@@ -278,6 +297,12 @@ public sealed class ThrowableItemUseController : MonoBehaviour
             return false;
         }
 
+        if (!this._selectedItem.IsThrowable)
+        {
+            Debug.LogWarning("투명화 사용은 호스트 연결 후 요청하세요.",this);
+            return false;
+        }
+        
         if (!this.HasInventoryHandlers)
         {
             Debug.LogWarning("인벤토리 보유 확인과 사용 결과 처리를 연결하세요.", this);
@@ -294,7 +319,6 @@ public sealed class ThrowableItemUseController : MonoBehaviour
 
         try
         {
-            // TODO(네트워크): 보유 확인과 결과 처리는 호스트에서 실행
             if (!canUseItem(item))
             {
                 onUseCompleted(item, false);
@@ -418,9 +442,9 @@ public sealed class ThrowableItemUseController : MonoBehaviour
 
     internal void NotifyThrowRequestCompleted(
         ItemType item,
-        bool hasLaunched)
+        bool hasUsed)
     {
-        this.ThrowRequestCompleted?.Invoke(item, hasLaunched);
+        this.ThrowRequestCompleted?.Invoke(item, hasUsed);
     }
 
     // 종류에 해당하는 아이템 정의 검색

@@ -20,6 +20,9 @@ public sealed class ThrowableItemDefinition : ScriptableObject
     [Tooltip("벽 아이템의 배치 치수")]
     public WallPlacementSettings WallSettings;
 
+    [Tooltip("투명화 아이템의 효과 설정")]
+    public InvisibilityEffectSettings InvisibilitySettings;
+
     [Header("다른 사람에게 보이는 외형")]
 
     [Tooltip("외형의 최대 길이")]
@@ -43,6 +46,12 @@ public sealed class ThrowableItemDefinition : ScriptableObject
 
     [Tooltip("화면 표시 위치 기준 회전 보정")]
     public Vector3 FirstPersonVisualEulerAngles;
+
+    public bool IsThrowable => this.Item != ItemType.None && this.Item != ItemType.Invisibility;
+
+    public bool HasUseEffect => this.Item == ItemType.Invisibility
+            ? this.InvisibilitySettings != null
+            : this.IsThrowable && this.ImpactEffect != null;
 
     public GameObject GetFlightVisualPrefab()
     {
