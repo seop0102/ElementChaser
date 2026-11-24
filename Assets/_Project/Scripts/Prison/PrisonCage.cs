@@ -8,6 +8,9 @@ public class PrisonCage : MonoBehaviour
     [Header("감옥 모델")]
     [SerializeField] private Transform visual;
 
+    [Header("크기 계산에 사용할 감옥 본체")]
+    [SerializeField] private Renderer[] sizeReferenceRenderers;
+
     [Header("낙하 설정")]
     [SerializeField, Min(0.1f)] private float dropHeight = 4f;
 
@@ -65,31 +68,52 @@ public class PrisonCage : MonoBehaviour
 
     private bool FitVisual(Vector3 size)
     {
-        // 원본 모델에 충돌체가 있다면 별도로 만든 벽과 중복되지 않게 끈다.
-        foreach (Collider collider in visual.GetComponentsInChildren<Collider>(true))
-            collider.enabled = false;
-
-        Renderer[] renderers = visual.GetComponentsInChildren<Renderer>();
-
-        if (renderers.Length == 0)
+        // 크기 계산에 사용할 본체가 연결되어 있는지 확인한다.
+        if (sizeReferenceRenderers == null ||
+            sizeReferenceRenderers.Length == 0)
         {
-            Debug.LogError("PrisonCage: Visual 안에 Renderer가 없습니다.", this);
+            Debug.LogError(
+                "PrisonCage: Size Reference Renderers를 연결해 주세요.",
+                this
+            );
             return false;
         }
 
-        Bounds bounds = GetBounds(renderers);
+        foreach (Renderer reference in sizeReferenceRenderers)
+        {
+            if (reference == null ||
+                !reference.transform.IsChildOf(visual))
+            {
+                Debug.LogError(
+                    "PrisonCage: Visual 내부의 본체 Renderer를 연결해 주세요.",
+                    this
+                );
+                return false;
+            }
+        }
 
-        // 모델의 원래 크기와 관계없이 지정한 크기로 맞춘다.
+        // 충돌은 별도로 생성하는 CollisionWalls가 담당한다.
+        foreach (Collider collider in
+                 visual.GetComponentsInChildren<Collider>(true))
+        {
+            collider.enabled = false;
+        }
+
+        // 문을 제외한 본체 전체의 현재 크기를 구한다.
+        Bounds bounds = GetBounds(sizeReferenceRenderers);
+
         Vector3 ratio = new Vector3(
             size.x / Mathf.Max(bounds.size.x, 0.001f),
             size.y / Mathf.Max(bounds.size.y, 0.001f),
             size.z / Mathf.Max(bounds.size.z, 0.001f)
         );
 
-        visual.localScale = Vector3.Scale(visual.localScale, ratio);
+        // Visual 전체를 조절하므로 문도 함께 확대·축소된다.
+        visual.localScale =
+            Vector3.Scale(visual.localScale, ratio);
 
-        // 크기 변경 후 모델의 바닥 중심을 부모의 원점에 맞춘다.
-        bounds = GetBounds(renderers);
+        // 크기가 바뀐 후 본체의 바닥 중심을 다시 계산한다.
+        bounds = GetBounds(sizeReferenceRenderers);
 
         Vector3 bottomCenter = new Vector3(
             bounds.center.x,
@@ -97,7 +121,9 @@ public class PrisonCage : MonoBehaviour
             bounds.center.z
         );
 
+        // 본체 바닥 중심을 감옥 부모의 위치에 정렬한다.
         visual.position += transform.position - bottomCenter;
+
         return true;
     }
 
