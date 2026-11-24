@@ -1,4 +1,5 @@
 using System.Collections;
+using Mirror;
 using UnityEngine;
 
 // 감옥의 외형, 크기, 낙하와 벽 충돌을 담당한다.
@@ -253,5 +254,62 @@ public class PrisonCage : MonoBehaviour
         }
 
         SetDropProgress(1f);
+    }
+
+    private void LateUpdate()
+    {
+        if (!initialized || !landed || !NetworkClient.active)
+            return;
+
+        NetworkIdentity localPlayer = NetworkClient.localPlayer;
+
+        if (localPlayer == null)
+            return;
+
+        PlayerRoleSync role =
+            localPlayer.GetComponent<PlayerRoleSync>();
+
+        if (role == null)
+            return;
+
+        // 각 컴퓨터에서 자기 플레이어의 감옥 충돌을 설정한다.
+        ApplyPlayerCollision(localPlayer, role.IsChaser);
+    }
+
+    private void ApplyPlayerCollision(
+        NetworkIdentity player, bool ignoreCollision)
+    {
+        // CharacterController를 포함한 플레이어 충돌체를 가져온다.
+        Collider[] playerColliders =
+            player.GetComponentsInChildren<Collider>();
+
+        foreach (BoxCollider wall in walls)
+        {
+            if (wall == null || !wall.enabled)
+                continue;
+
+            foreach (Collider playerCollider in playerColliders)
+            {
+                if (!playerCollider.enabled ||
+                    !playerCollider.gameObject.activeInHierarchy)
+                {
+                    continue;
+                }
+
+                // 현재 설정과 같으면 다시 변경하지 않는다.
+                if (Physics.GetIgnoreCollision(wall, playerCollider)
+                    == ignoreCollision)
+                {
+                    continue;
+                }
+
+                // 술래는 충돌을 무시하고, 도망자는 충돌을 적용한다.
+                Physics.IgnoreCollision(
+                    wall,
+                    playerCollider,
+                    ignoreCollision
+                );
+            }
+        }
     }
 }
