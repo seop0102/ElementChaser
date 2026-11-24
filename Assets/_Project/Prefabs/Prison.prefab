@@ -46,6 +46,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PrisonCage
   visual: {fileID: 1130567991878187296}
+  sizeReferenceRenderers:
+  - {fileID: 782595499547633531}
+  - {fileID: 5179994491164820471}
+  - {fileID: 2917390510876611149}
   dropHeight: 4
   wallThickness: 0.08
   testSize: {x: 1.5, y: 2.3, z: 1.5}
@@ -139,8 +143,23 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 095e1463a6898ab40affe6d6d4e36cf9, type: 3}
+--- !u!23 &782595499547633531 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 208989198621161904, guid: 095e1463a6898ab40affe6d6d4e36cf9, type: 3}
+  m_PrefabInstance: {fileID: 592835659806154443}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1130567991878187296 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 095e1463a6898ab40affe6d6d4e36cf9, type: 3}
+  m_PrefabInstance: {fileID: 592835659806154443}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &2917390510876611149 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 2325699992432102534, guid: 095e1463a6898ab40affe6d6d4e36cf9, type: 3}
+  m_PrefabInstance: {fileID: 592835659806154443}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &5179994491164820471 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -3469700876007760580, guid: 095e1463a6898ab40affe6d6d4e36cf9, type: 3}
   m_PrefabInstance: {fileID: 592835659806154443}
   m_PrefabAsset: {fileID: 0}

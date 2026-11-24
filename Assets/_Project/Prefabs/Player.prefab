@@ -1813,8 +1813,7 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0
   cagePrefab: {fileID: 4803022214512022022, guid: e7be747e6dc28914e8653f00657c380c, type: 3}
-  widthMultiplier: 1.5
-  heightMultiplier: 1.15
+  heightMultiplier: 3
   dropDuration: 0.6
 --- !u!114 &2698653959217070993
 MonoBehaviour:
