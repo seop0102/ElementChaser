@@ -153,4 +153,56 @@ public class NetworkPrison : NetworkBehaviour
         // 모든 클라이언트에서 감옥과 벽을 제거한다.
         NetworkServer.Destroy(gameObject);
     }
+
+    // 감옥 중심이 아닌 벽까지의 거리를 구한다.
+    public float GetInteractionDistance(Vector3 position)
+    {
+        Bounds bounds = new Bounds(
+            groundPosition + Vector3.up * (cageSize.y * 0.5f),
+            cageSize
+        );
+
+        return Vector3.Distance(
+            position,
+            bounds.ClosestPoint(position)
+        );
+    }
+
+    [Server]
+    public void ServerRescueAll()
+    {
+        GameStateManager game = GameStateManager.Instance;
+
+        // 낙하 중이거나 시간이 끝난 감옥은 구조할 수 없다.
+        if (!initialized ||
+            expirationHandled ||
+            IsDropping ||
+            RemainingTime <= 0d ||
+            game == null ||
+            game.CurrentPhase != GamePhase.Playing)
+        {
+            return;
+        }
+
+        // 구조와 시간 초과 처리가 중복되지 않도록 막는다.
+        expirationHandled = true;
+
+        NetworkIdentity[] identities =
+            NetworkServer.spawned.Values.ToArray();
+
+        foreach (NetworkIdentity identity in identities)
+        {
+            if (identity == null)
+                continue;
+
+            PlayerPrison prisoner =
+                identity.GetComponent<PlayerPrison>();
+
+            if (prisoner != null)
+                prisoner.ServerReleaseFromPrison(netId);
+        }
+
+        // 모든 클라이언트에서 감옥과 타이머를 제거한다.
+        NetworkServer.Destroy(gameObject);
+    }
 }
