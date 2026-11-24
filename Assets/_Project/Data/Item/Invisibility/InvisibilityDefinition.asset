@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cdfcb480b4bcd934898f737c1afb9ff5, type: 3}
+  m_Name: InvisibilityDefinition
+  m_EditorClassIdentifier: Assembly-CSharp::ThrowableItemDefinition
+  Item: 2
+  HeldVisualPrefab: {fileID: 8953479522935392758, guid: 3b444db23d535cd418439af93c3f21c8, type: 3}
+  FlightVisualPrefab: {fileID: 0}
+  ImpactEffect: {fileID: 0}
+  WallSettings: {fileID: 0}
+  InvisibilitySettings: {fileID: 11400000, guid: d7984a105d24feb42848a4e5b324d6e9, type: 2}
+  HeldVisualSize: 0.3
+  HeldVisualOffset: {x: 0, y: 0, z: 0}
+  HeldVisualEulerAngles: {x: 0, y: 0, z: 0}
+  FirstPersonVisualSize: 0.3
+  FirstPersonVisualOffset: {x: 0, y: 0, z: 0}
+  FirstPersonVisualEulerAngles: {x: 0, y: 0, z: 0}

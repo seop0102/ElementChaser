@@ -1303,8 +1303,11 @@ GameObject:
   - component: {fileID: 2698653959217070993}
   - component: {fileID: -4427818686111940453}
   - component: {fileID: 5970336186163748449}
-  - component: {fileID: 1388967423106303397}
+  - component: {fileID: 4368830705900155010}
+  - component: {fileID: 2294078307590662844}
   - component: {fileID: 6221017216551645678}
+  - component: {fileID: 6193316464068314394}
+  - component: {fileID: 1388967423106303397}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1741,6 +1744,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ec867b17c1197f6498d97408c2d768b8, type: 2}
   - {fileID: 11400000, guid: a531018dcb81e6e43832cf3c342f838a, type: 2}
   - {fileID: 11400000, guid: 1567e15221a0b3c4f9eee344130d2b89, type: 2}
+  - {fileID: 11400000, guid: 473f4cc998a7bc948bbe25ecb060c019, type: 2}
   _defaultCollisionMask:
     serializedVersion: 2
     m_Bits: 192
@@ -1862,7 +1866,7 @@ MonoBehaviour:
   _worldAnchor: {fileID: 8698052552938394117}
   _firstPersonAnchor: {fileID: 6872980227074027903}
   _playerCamera: {fileID: 1834470950816112106}
---- !u!114 &1388967423106303397
+--- !u!114 &4368830705900155010
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1871,13 +1875,26 @@ MonoBehaviour:
   m_GameObject: {fileID: 7007396128862476477}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5f8571c8c7699a4ebb74eb669a68770, type: 3}
+  m_Script: {fileID: 11500000, guid: 4c84556b9a7649d4da71e9aa17bdc24b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerHitFlash
-  bodyRenderers:
-  - {fileID: 2889409915981267354}
-  hitColor: {r: 1, g: 0, b: 0, a: 1}
-  flashDuration: 0.15
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInvisibility
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+--- !u!114 &2294078307590662844
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7007396128862476477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ef9fde0540f49e43b7e6c2aafb28585, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInvisibilityVisual
+  _characterVisualRoot: {fileID: 5212214343731624846}
+  _nameTagCanvas: {fileID: 3402919092353529226}
 --- !u!114 &6221017216551645678
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1895,6 +1912,35 @@ MonoBehaviour:
   syncInterval: 0
   hideRenderers:
   - {fileID: 2889409915981267354}
+--- !u!114 &6193316464068314394
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7007396128862476477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 493a3f23f73680e468f5be4dd515acbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InvisibilityUseFeedback
+  _effectAnchor: {fileID: 6872980227074027903}
+--- !u!114 &1388967423106303397
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7007396128862476477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5f8571c8c7699a4ebb74eb669a68770, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHitFlash
+  bodyRenderers:
+  - {fileID: 2889409915981267354}
+  hitColor: {r: 1, g: 0, b: 0, a: 1}
+  flashDuration: 0.15
 --- !u!1 &7081482911517571264
 GameObject:
   m_ObjectHideFlags: 0

@@ -18,6 +18,7 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
     private ThrowableItemUseController _controller;
     private PlayerRoleSync _playerRole;
     private PlayerHealth _playerHealth;
+    private PlayerInvisibility _invisibility;
     private CharacterController _characterController;
 
     private bool _isWaitingForThrow;
@@ -72,6 +73,7 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
         this._controller = GetComponent<ThrowableItemUseController>();
         this._playerRole = GetComponent<PlayerRoleSync>();
         this._playerHealth = GetComponent<PlayerHealth>();
+        this._invisibility = GetComponent<PlayerInvisibility>();
         this._characterController = GetComponent<CharacterController>();
     }
 
@@ -100,8 +102,7 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
                 ThrowableItemDefinition definition =
                     this._controller.FindDefinition(item);
 
-                isAccepted =
-                    definition != null && definition.ImpactEffect != null;
+                isAccepted = definition != null && definition.HasUseEffect;
             }
         }
 
@@ -143,7 +144,7 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
             return;
         }
 
-        bool hasLaunched = false;
+        bool hasUsed = false;
         Func<ItemType, bool> canUseItem = null;
         Action<ItemType, bool> onUseCompleted = null;
 
@@ -151,18 +152,21 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
 
         try
         {
-            if (!this._controller.TryGetInventoryHandlers(
-                    out canUseItem, out onUseCompleted))
+            if (!this._controller.TryGetInventoryHandlers(out canUseItem,out onUseCompleted))
             {
-                Debug.LogWarning(
-                    "호스트의 해당 플레이어에 인벤토리 처리를 연결하세요.",
-                    this);
+                Debug.LogWarning("호스트의 해당 플레이어에 인벤토리 처리를 연결하세요.",this);
+
                 return;
             }
 
-            if (item == ItemType.None
-                || !this.CanHoldItem
-                || !this.IsValidThrowAim(origin, direction))
+            if (item == ItemType.None || !this.CanHoldItem)
+            {
+                return;
+            }
+
+            ThrowableItemDefinition definition = this._controller.FindDefinition(item);
+
+            if (definition == null || !definition.HasUseEffect)
             {
                 return;
             }
@@ -172,10 +176,28 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
                 return;
             }
 
-            hasLaunched = this._controller.TryLaunchServerItem(
-                item, origin, direction.normalized);
+            if (definition.IsThrowable)
+            {
+                if (!this.IsValidThrowAim(origin, direction))
+                {
+                    return;
+                }
 
-            if (hasLaunched)
+                hasUsed = this._controller.TryLaunchServerItem(item, origin, direction.normalized);
+            }
+            else if (item == ItemType.Invisibility)
+            {
+                if (this._invisibility == null)
+                {
+                    Debug.LogError("Player Invisibility 컴포넌트를 추가하세요.",this);
+
+                    return;
+                }
+
+                hasUsed = this._invisibility.TryActivate(definition.InvisibilitySettings);
+            }
+
+            if (hasUsed)
             {
                 this._heldItem = ItemType.None;
             }
@@ -186,12 +208,12 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
         }
         finally
         {
-            // 실제 발사 결과를 호스트의 인벤토리에 전달
+            // 실제 사용 결과를 호스트의 인벤토리에 전달
             if (item != ItemType.None && onUseCompleted != null)
             {
                 try
                 {
-                    onUseCompleted(item, hasLaunched);
+                    onUseCompleted(item, hasUsed);
                 }
                 catch (Exception exception)
                 {
@@ -200,7 +222,7 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
             }
 
             this._isProcessingThrow = false;
-            this.SendThrowResult(item, hasLaunched);
+            this.SendThrowResult(item, hasUsed);
         }
     }
 
@@ -827,17 +849,16 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
     private void TargetCompleteThrow(
         NetworkConnectionToClient target,
         ItemType item,
-        bool hasLaunched,
+        bool hasUsed,
         ItemType confirmedItem)
     {
         this._isWaitingForThrow = false;
-
         this._controller.ApplyHeldItem(confirmedItem);
-        this._controller.NotifyThrowRequestCompleted(item, hasLaunched);
+        this._controller.NotifyThrowRequestCompleted(item, hasUsed);
 
-        if (!hasLaunched)
+        if (!hasUsed)
         {
-            Debug.LogWarning($"아이템 투척이 거절됐습니다: {item}", this);
+            Debug.LogWarning($"아이템 사용이 거절됐습니다: {item}",this);
         }
     }
 }
