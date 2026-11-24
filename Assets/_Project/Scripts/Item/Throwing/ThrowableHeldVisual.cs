@@ -17,6 +17,13 @@ public sealed class ThrowableHeldVisual : MonoBehaviour
     private Renderer[] _firstPersonRenderers = Array.Empty<Renderer>();
 
     private bool _isLocalPlayer;
+    private PlayerInvisibility _invisibility;
+    private ShadowCastingMode[] _worldShadowModes = Array.Empty<ShadowCastingMode>();
+
+    private void Awake()
+    {
+        this._invisibility = this.GetComponent<PlayerInvisibility>();
+    }
 
     private void OnEnable()
     {
@@ -62,6 +69,18 @@ public sealed class ThrowableHeldVisual : MonoBehaviour
             definition.HeldVisualOffset,
             definition.HeldVisualEulerAngles,
             out this._worldRenderers);
+
+        this._worldShadowModes = new ShadowCastingMode[this._worldRenderers.Length];
+
+        for (int i = 0; i < this._worldRenderers.Length; i++)
+        {
+            Renderer renderer = this._worldRenderers[i];
+
+            if (renderer != null)
+            {
+                this._worldShadowModes[i] = renderer.shadowCastingMode;
+            }
+        }
 
         if (isLocalPlayer)
         {
@@ -144,19 +163,35 @@ public sealed class ThrowableHeldVisual : MonoBehaviour
         return root;
     }
 
-    // 카메라별 표시 구분
+    // 카메라와 투명화 상태에 따른 표시 구분
     private void UpdateCameraVisibility(Camera camera)
     {
         bool isLocalCamera =
             this._isLocalPlayer && camera == this._playerCamera;
 
-        SetVisibility(this._worldRenderers, !isLocalCamera);
+        bool isInvisible =
+            this._invisibility != null
+            && this._invisibility.IsInvisible;
+
+        SetVisibility(this._worldRenderers, !isLocalCamera && !isInvisible);
+
+        for (int i = 0; i < this._worldRenderers.Length; i++)
+        {
+            Renderer renderer = this._worldRenderers[i];
+
+            if (renderer != null)
+            {
+                renderer.shadowCastingMode = isInvisible
+                    ? ShadowCastingMode.Off
+                    : this._worldShadowModes[i];
+            }
+        }
+
         SetVisibility(this._firstPersonRenderers, isLocalCamera);
     }
-
     private static void SetVisibility(
-        Renderer[] renderers,
-        bool isVisible)
+    Renderer[] renderers,
+    bool isVisible)
     {
         foreach (Renderer renderer in renderers)
         {
@@ -175,6 +210,8 @@ public sealed class ThrowableHeldVisual : MonoBehaviour
 
         this._worldRenderers = Array.Empty<Renderer>();
         this._firstPersonRenderers = Array.Empty<Renderer>();
+        this._worldShadowModes = Array.Empty<ShadowCastingMode>();
+
         this._isLocalPlayer = false;
     }
 
