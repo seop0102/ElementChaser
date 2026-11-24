@@ -24,7 +24,9 @@ public class ElementNetworkManager : NetworkManager
     private bool spawnStarted = false;
     private bool returningToLobby = false;
     private bool isShuttingDown = false;
-
+    private bool gameStartRequested = false; 
+    private Coroutine startupWatchdog;
+    
     public void BeginShutdown()
     {
         isShuttingDown = true;
@@ -116,6 +118,16 @@ public class ElementNetworkManager : NetworkManager
             Debug.LogWarning("Only the host can start the game.");
             return;
         }
+
+        if (gameStartRequested ||
+            returningToLobby ||
+            isShuttingDown ||
+            SceneManager.GetActiveScene().name != "MainMenu")
+        {
+            Debug.LogWarning("[StartGame] 현재 게임 시작 불가");
+            return;
+        }
+
         if (NetworkServer.connections.Count != RequiredPlayerCount)
         {
             Debug.LogWarning(
@@ -152,14 +164,108 @@ public class ElementNetworkManager : NetworkManager
             );
             return;
         }
+
+        gameStartRequested = true; // 추가
+
         returningToLobby = false;
+
         SteamLobbyManager.Instance?.ClearReturnToLobby();
+
         loadedPlayers.Clear();
         spawnedPlayers.Clear();
         spawnStarted = false;
+
+// 기존 게임 시작 감시가 남아 있다면 정리
+        if (startupWatchdog != null)
+        {
+            StopCoroutine(startupWatchdog);
+            startupWatchdog = null;
+        }
+
+// 게임 시작 과정 감시 시작
+        startupWatchdog = StartCoroutine(WatchGameStartup());
+
+// 게임 시작 후 로비 신규 참가 제한
         SteamLobbyManager.Instance?.LockLobby();
+
+// 모든 클라이언트를 게임 씬으로 이동
         ServerChangeScene("GameScene");
+
     }
+    
+[Server]
+private IEnumerator WatchGameStartup()
+{
+    float deadline = Time.realtimeSinceStartup + 90f;
+    float nextLog = Time.realtimeSinceStartup + 10f;
+
+    Debug.Log("[Connect/Startup] 게임 시작 감시 시작");
+
+    while (NetworkServer.active &&
+           !returningToLobby &&
+           !isShuttingDown &&
+           Time.realtimeSinceStartup < deadline)
+    {
+        GameStateManager state = GameStateManager.Instance;
+
+        // 카운트다운 또는 실제 플레이 상태라면
+        // 게임 시작 단계는 통과한 것으로 판단
+        if (state != null &&
+            (state.CurrentPhase == GamePhase.Countdown ||
+             state.CurrentPhase == GamePhase.Playing))
+        {
+            Debug.Log(
+                $"[Connect/Startup] 시작 성공: {state.CurrentPhase}"
+            );
+
+            startupWatchdog = null;
+            yield break;
+        }
+
+        // 10초마다 현재 준비 상태 출력
+        if (Time.realtimeSinceStartup >= nextLog)
+        {
+            Debug.LogWarning(
+                $"[Connect/Startup] 대기 중 | " +
+                $"Scene={SceneManager.GetActiveScene().name}, " +
+                $"Ready={loadedPlayers.Count}/{RequiredPlayerCount}, " +
+                $"SpawnAck={spawnedPlayers.Count}/{RequiredPlayerCount}, " +
+                $"Phase={(state == null ? "Missing" : state.CurrentPhase.ToString())}"
+            );
+
+            nextLog = Time.realtimeSinceStartup + 10f;
+        }
+
+        yield return new WaitForSecondsRealtime(0.5f);
+    }
+
+    startupWatchdog = null;
+
+    // 종료 절차가 이미 시작됐으면 중복 처리하지 않음
+    if (!NetworkServer.active ||
+        returningToLobby ||
+        isShuttingDown)
+    {
+        yield break;
+    }
+
+    Debug.LogError(
+        $"[Connect/Startup] 90초 초과 | " +
+        $"Ready={loadedPlayers.Count}/{RequiredPlayerCount}, " +
+        $"SpawnAck={spawnedPlayers.Count}/{RequiredPlayerCount}"
+    );
+
+    // 게임 씬에 들어온 경우 기존 중단 절차 사용
+    if (SceneManager.GetActiveScene().name == "GameScene")
+    {
+        BeginGameInterruptShutdown();
+    }
+    else
+    {
+        SteamLobbyManager.Instance?.LeaveLobby();
+    }
+}
+
     
     public override void OnServerSceneChanged(string sceneName)
     {
@@ -172,6 +278,7 @@ public class ElementNetworkManager : NetworkManager
 
         TryStartSpawn();
     }
+
     
     public override void OnServerReady(NetworkConnectionToClient conn)
     {
@@ -211,8 +318,9 @@ public class ElementNetworkManager : NetworkManager
     {
         PlayerMovement[] players = null;
 
-        float timeout = Time.time + 10f;
-        while (Time.time < timeout &&
+        float timeout = Time.realtimeSinceStartup + 35f;
+
+        while (Time.realtimeSinceStartup < timeout &&
                spawnStarted &&
                !returningToLobby &&
                !isShuttingDown)
@@ -238,7 +346,12 @@ public class ElementNetworkManager : NetworkManager
             players.Length != RequiredPlayerCount ||
             players.Any(p => !p.isServer))
         {
-            Debug.LogError("[Spawn] 플레이어 준비 실패");
+            Debug.LogError(
+                $"[Connect/Spawn] 플레이어 준비 실패 | " +
+                $"현재={players?.Length ?? 0}/{RequiredPlayerCount}"
+            );
+
+            BeginGameInterruptShutdown();
             yield break;
         }
         
@@ -255,8 +368,10 @@ public class ElementNetworkManager : NetworkManager
             if (spawnPoint == null)
             {
                 Debug.LogError(
-                    $"[Spawn] {spawnName}을 찾을 수 없습니다."
+                    $"[Connect/Spawn] 스폰 포인트 없음: {spawnName}"
                 );
+
+                BeginGameInterruptShutdown();
                 yield break;
             }
 
@@ -293,9 +408,14 @@ public class ElementNetworkManager : NetworkManager
             return;
         }
         
-        if (playerIdentity.connectionToClient == null)
+        if (playerIdentity.connectionToClient == null ||
+            playerIdentity.connectionToClient.identity != playerIdentity)
+        {
+            Debug.LogWarning(
+                $"[Connect/Spawn] 유효하지 않은 스폰 완료 응답: {playerNetId}"
+            );
             return;
-        
+        }
         if (!spawnedPlayers.Add(playerNetId))
             return;
 
@@ -355,7 +475,11 @@ public class ElementNetworkManager : NetworkManager
         bool isFull =
             NetworkServer.connections.Count > RequiredPlayerCount;
 
-        if (isGameScene || isFull || isShuttingDown)
+        if (isGameScene ||
+            isFull ||
+            isShuttingDown ||
+            gameStartRequested ||
+            returningToLobby)
         {
             Debug.LogWarning(
                 $"[Network] 신규 접속 거절: {conn.connectionId}"
@@ -383,16 +507,23 @@ public class ElementNetworkManager : NetworkManager
     {
         bool wasHost = NetworkServer.active;
 
+        bool wasGameFinished =
+            GameStateManager.Instance != null &&
+            GameStateManager.Instance.CurrentPhase
+            == GamePhase.Finished;
+
         if (!wasHost)
         {
-            Debug.Log("[Network] 클라이언트 연결 종료");
+            Debug.Log(
+                $"[Network] 클라이언트 연결 종료, " +
+                $"GameFinished={wasGameFinished}"
+            );
 
-            // Mirror의 기본 종료 처리보다 먼저
-            // 연결 종료 원인을 SteamLobbyManager에 전달
-            SteamLobbyManager.Instance?.HandleDisconnected();
+            SteamLobbyManager.Instance?.HandleDisconnected(
+                wasGameFinished
+            );
         }
 
-        // Mirror 기본 연결 종료 처리
         base.OnClientDisconnect();
     }
 
@@ -413,6 +544,7 @@ public class ElementNetworkManager : NetworkManager
         isShuttingDown = false;
         returningToLobby = false;
         spawnStarted = false;
+        gameStartRequested = false;
         LobbyPlayerCount = 0;
 
         loadedPlayers.Clear();
@@ -428,7 +560,13 @@ public class ElementNetworkManager : NetworkManager
     {
         // 종료 과정에서 발생하는 Disconnect 중복 처리 방지
         isShuttingDown = true;
-
+        gameStartRequested = false; 
+        if (startupWatchdog != null)
+        {
+            StopCoroutine(startupWatchdog);
+            startupWatchdog = null;
+        }
+        
         loadedPlayers.Clear();
         spawnedPlayers.Clear();
 
@@ -511,31 +649,56 @@ public class ElementNetworkManager : NetworkManager
         if (returningToLobby || isShuttingDown)
             return false;
 
+        bool gameFinished =
+            GameStateManager.Instance != null &&
+            GameStateManager.Instance.CurrentPhase
+            == GamePhase.Finished;
+
         returningToLobby = true;
         spawnStarted = false;
+        gameStartRequested = false;
 
-        Debug.Log("[Network] 게임 중단 절차 시작");
+        if (startupWatchdog != null)
+        {
+            StopCoroutine(startupWatchdog);
+            startupWatchdog = null;
+        }
 
-        GameStateManager.Instance?.InterruptGame();
+        if (gameFinished)
+        {
+            Debug.Log("[Network] 게임 정상 종료 → 전체 방 종료");
+        }
+        else
+        {
+            Debug.Log("[Network] 게임 중단 절차 시작");
 
-        StartCoroutine(ReturnToLobbyRoutine());
+            GameStateManager.Instance?.InterruptGame();
+        }
+
+        StartCoroutine(ReturnToLobbyRoutine(gameFinished));
 
         return true;
     }
     [Server]
-    private IEnumerator ReturnToLobbyRoutine()
+    private IEnumerator ReturnToLobbyRoutine(
+        bool gameFinished = false)
     {
-        Debug.Log("[Network] 게임 중단 → 3초 후 방 종료");
-
-        // 게임 중단 안내를 3초간 표시
-        yield return new WaitForSecondsRealtime(3f);
+        if (!gameFinished)
+        {
+            // 비정상 종료일 때만 안내 패널 3초 표시
+            yield return new WaitForSecondsRealtime(3f);
+        }
+        else
+        {
+            // 정상 종료 시 다음 프레임에 종료
+            yield return null;
+        }
 
         if (!NetworkServer.active)
             yield break;
 
-        Debug.Log("[Network] 게임 중단 완료, 전체 방 종료");
+        Debug.Log("[Network] 전체 방 종료");
 
-        // 기존 로비로 돌아가는 대신 방 자체를 종료
         SteamLobbyManager lobbyManager =
             SteamLobbyManager.Instance;
 
@@ -545,10 +708,6 @@ public class ElementNetworkManager : NetworkManager
         }
         else
         {
-            Debug.LogWarning(
-                "[Network] SteamLobbyManager 없음, 서버 직접 종료"
-            );
-
             StopHost();
         }
     }
