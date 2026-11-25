@@ -1,4 +1,4 @@
-
+using System.Linq; // 네트워크 목록을 배열로 복사할 때 사용
 using Mirror;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -85,9 +85,9 @@ public class PlayerAttack : NetworkBehaviour
 
         int hitCount = 0;
 
-        // 서버에 존재하는 모든 플레이어 검사
+        // 공격 도중 감옥이 생성돼 원본 목록이 바뀌어도 안전하게 순회한다.
         foreach (NetworkIdentity identity
-                 in NetworkServer.spawned.Values)
+                 in NetworkServer.spawned.Values.ToArray())
         {
             if (identity == null)
                 continue;
