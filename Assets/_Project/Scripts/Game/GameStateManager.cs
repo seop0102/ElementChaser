@@ -62,6 +62,10 @@ public class GameStateManager : NetworkBehaviour
             ? System.Math.Max(0, gameEndTime - NetworkTime.time)
             : 0;
 
+    [Header("게임 종료 사운드")]
+    [SerializeField] private AudioSource gameEndAudioSource;
+    [SerializeField] private AudioClip gameEndBell;
+
     private void Awake()
     {
         Instance = this;
@@ -369,6 +373,9 @@ public class GameStateManager : NetworkBehaviour
 
         // 게임 종료 상태 동기화
         currentPhase = GamePhase.Finished;
+        
+        // 모든 플레이어에게 종료 종소리 재생
+        RpcPlayGameEndBell();
 
         Debug.Log(
             $"[GameState] 게임 종료! 승리자: {winnerNames}"
@@ -440,5 +447,16 @@ public class GameStateManager : NetworkBehaviour
             if (prison != null)
                 prison.ServerCheckExpiration(gameEndTime);
         }
+    }
+    [ClientRpc]
+    private void RpcPlayGameEndBell()
+    {
+        if (gameEndAudioSource == null || gameEndBell == null)
+        {
+            Debug.LogWarning("[GameEnd] 종소리 연결 확인 필요");
+            return;
+        }
+
+        gameEndAudioSource.PlayOneShot(gameEndBell);
     }
 }
