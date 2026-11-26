@@ -66,7 +66,10 @@ public class MapNetworkSync : NetworkBehaviour
         }
 
         MapGenerator.MapShape selectedShape =
-            (MapGenerator.MapShape)(selectedMapIndex + 1);
+            (MapGenerator.MapShape)(selectedMapIndex);
+
+        // 실제 맵 생성
+        mapGenerator.GenerateMap(selectedShape, selectedMapSeed);
 
         Debug.Log(
             $"[MapSync] 맵 정보 수신 | " +
