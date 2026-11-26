@@ -1,6 +1,8 @@
 
 using Mirror;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class PlayerRoleSync : NetworkBehaviour
 {
@@ -33,12 +35,12 @@ public class PlayerRoleSync : NetworkBehaviour
 
     public bool IsJailed => isJailed;
 
+    private Coroutine uiCoroutine;
+
     private void Awake()
     {
         if (characterModel != null)
-        {
             originalModelScale = characterModel.localScale;
-        }
 
         UpdateAppearance();
     }
@@ -55,13 +57,89 @@ public class PlayerRoleSync : NetworkBehaviour
         UpdateAppearance();
     }
 
+    // 로컬 플레이어의 UI만 설정
+    public override void OnStartLocalPlayer()
+    {
+        base.OnStartLocalPlayer();
+
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        RefreshLocalUI();
+    }
+
+    public override void OnStopLocalPlayer()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+
+        if (uiCoroutine != null)
+        {
+            StopCoroutine(uiCoroutine);
+            uiCoroutine = null;
+        }
+
+        base.OnStopLocalPlayer();
+    }
+
+    private void OnSceneLoaded(
+        Scene scene,
+        LoadSceneMode mode)
+    {
+        if (scene.name == "GameScene")
+            RefreshLocalUI();
+    }
+
+    private void RefreshLocalUI()
+    {
+        if (!isLocalPlayer)
+            return;
+
+        if (SceneManager.GetActiveScene().name != "GameScene")
+            return;
+
+        if (uiCoroutine != null)
+            StopCoroutine(uiCoroutine);
+
+        uiCoroutine = StartCoroutine(ApplyLocalUI());
+    }
+
+    private IEnumerator ApplyLocalUI()
+    {
+        // GameCanvas가 늦게 생성되는 경우에 대비
+        for (int i = 0; i < 120; i++)
+        {
+            if (SceneManager.GetActiveScene().name != "GameScene")
+                break;
+
+            HitEffectUI hitEffect =
+                FindFirstObjectByType<HitEffectUI>();
+
+            if (hitEffect != null)
+            {
+                hitEffect.SetRoleUI(IsChaser);
+
+                Debug.Log(
+                    $"[RoleUI] {name}: " +
+                    (IsChaser ? "악마 UI" : "천사 UI")
+                );
+
+                uiCoroutine = null;
+                yield break;
+            }
+
+            yield return null;
+        }
+
+        uiCoroutine = null;
+    }
+
     [Server]
     public void SetJailed(bool jailed)
     {
         isJailed = jailed;
     }
 
-    private void OnJailChanged(bool oldValue, bool newValue)
+    private void OnJailChanged(
+        bool oldValue,
+        bool newValue)
     {
         Debug.Log(
             $"[감옥 상태 변경] {gameObject.name}: {newValue}"
@@ -73,6 +151,9 @@ public class PlayerRoleSync : NetworkBehaviour
     {
         role = newRole;
         UpdateAppearance();
+
+        // 호스트의 로컬 플레이어 UI도 갱신
+        RefreshLocalUI();
     }
 
     private void OnRoleChanged(
@@ -80,10 +161,12 @@ public class PlayerRoleSync : NetworkBehaviour
         PlayerRole newRole)
     {
         Debug.Log(
-            $"[역할 변경] {gameObject.name}: {oldRole} → {newRole}"
+            $"[역할 변경] {gameObject.name}: " +
+            $"{oldRole} → {newRole}"
         );
 
         UpdateAppearance();
+        RefreshLocalUI();
     }
 
     private void UpdateAppearance()
@@ -114,4 +197,3 @@ public class PlayerRoleSync : NetworkBehaviour
         }
     }
 }
-
