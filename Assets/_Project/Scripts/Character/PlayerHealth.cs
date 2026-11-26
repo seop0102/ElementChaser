@@ -5,6 +5,9 @@ using UnityEngine;
 public class PlayerHealth : NetworkBehaviour
 {
     [SerializeField] private int maxHealth = 4;
+    [Header("피격 사운드")]
+    [SerializeField] private AudioSource hitAudioSource;
+    [SerializeField] private AudioClip hitSound;
     [Header("Death Ground Alignment")]
     [SerializeField] private Transform characterModel;
     [SerializeField] private float deathGroundOffset = 0f;
@@ -25,7 +28,6 @@ public class PlayerHealth : NetworkBehaviour
     public int CurrentHealth => currentHealth;
     public int MaxHealth => maxHealth;
     public bool IsDead => isDead;
-
 
 [TargetRpc]
 private void TargetPlayHitEffect(
@@ -122,24 +124,25 @@ private void TargetPlayHitEffect(
         );
 
         
-RpcPlayHitAnimation();
-RpcPlayHitFlash(); // 추가!
+    RpcPlayHitAnimation();
+    RpcPlayHitFlash(); // 추가!
 
-if (connectionToClient != null)
-    TargetPlayHitEffect(connectionToClient);
+    if (connectionToClient != null)
+        TargetPlayHitEffect(connectionToClient);
+        RpcPlayHitSound();
 
 
-        if (currentHealth == 0)
-        {
-            // 즉시 사망시키지 않고 감금 상태로 전환한다.
-            prison.ServerEnterPrison();
+            if (currentHealth == 0)
+            {
+                // 즉시 사망시키지 않고 감금 상태로 전환한다.
+                prison.ServerEnterPrison();
+            }
+            else
+            {
+                // 살아있을 때만 카메라 흔들림을 적용한다.
+                TargetShakeCamera(connectionToClient);
+            }
         }
-        else
-        {
-            // 살아있을 때만 카메라 흔들림을 적용한다.
-            TargetShakeCamera(connectionToClient);
-        }
-    }
 
     private void OnHealthChanged(int oldHealth, int newHealth)
     {
@@ -157,8 +160,10 @@ if (connectionToClient != null)
         ApplyDeathState();
     }
 
-    private void ApplyDeathState()
+
+private void ApplyDeathState()
 {
+    // 기존 사망 시 모델 위치 처리 유지
     if (characterModel != null)
     {
         if (isDead)
@@ -174,13 +179,39 @@ if (connectionToClient != null)
     }
 
     if (!isLocalPlayer)
-        return;
+    return;
 
-    if (isDead)
-    {
-        Debug.Log("[관전] 사망 상태 확인");
-    }
+DeathOverlayUI deathOverlay =
+    FindFirstObjectByType<DeathOverlayUI>();
+
+HitEffectUI hitEffect =
+    FindFirstObjectByType<HitEffectUI>();
+
+if (isDead)
+{
+    // 흰색 오버레이
+    if (deathOverlay != null)
+        deathOverlay.ShowDeathOverlay();
+
+    // 오버레이 위에 천사 구름 프레임 표시
+    if (hitEffect != null)
+        hitEffect.ShowDeathEffect();
 }
+else
+{
+    if (deathOverlay != null)
+        deathOverlay.HideDeathOverlay();
+
+    if (hitEffect != null)
+        hitEffect.HideDeathEffect();
+}
+
+if (isDead)
+{
+    Debug.Log("[관전] 사망 상태 확인");
+}
+}
+
 
     [ClientRpc]
     private void RpcPlayHitAnimation()
@@ -247,4 +278,12 @@ private void RpcPlayHitFlash()
         currentHealth = Mathf.Clamp(2, 1, maxHealth);
         invincibleUntil = NetworkTime.time + 2d;
     }
+    [ClientRpc]
+private void RpcPlayHitSound()
+{
+    if (hitAudioSource == null || hitSound == null)
+        return;
+
+    hitAudioSource.PlayOneShot(hitSound);
+}
 }

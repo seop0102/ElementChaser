@@ -13,6 +13,10 @@ public class PlayerAttack : NetworkBehaviour
     [SerializeField] private float attackCooldown = 1f;
     [SerializeField] private int attackDamage = 1;
 
+    [Header("공격 사운드")]
+    [SerializeField] private AudioSource attackAudioSource;
+    [SerializeField] private AudioClip attackSound;
+
     [Header("공격 판정")]
     [SerializeField] private LayerMask obstacleMask;
 
@@ -77,6 +81,11 @@ public class PlayerAttack : NetworkBehaviour
 
         // 공격 애니메이션은 기존 방식 유지
         RpcPlayAttackAnimation();
+        // 공격한 술래에게 공격음 재생
+        if (connectionToClient != null)
+        {
+            TargetPlayAttackSound(connectionToClient);
+        }
 
         Vector3 origin = transform.position;
         Vector3 forward = transform.forward;
@@ -142,9 +151,27 @@ public class PlayerAttack : NetworkBehaviour
                 continue;
             }
 
-            // 공격 성공
+            
+            // 공격 성공 여부 확인
+            uint previousDamageVersion = target.DamageVersion;
+
             target.TakeDamage(attackDamage);
+
+            // 실제 체력이 감소한 경우에만 처리
+            if (target.DamageVersion == previousDamageVersion)
+                continue;
+
             hitCount++;
+
+            // 맞은 천사에게만 공격음 재생
+            if (identity.connectionToClient != null &&
+                identity.connectionToClient != connectionToClient)
+            {
+                TargetPlayAttackSound(
+                    identity.connectionToClient
+                );
+            }
+
 
             Debug.Log(
                 $"[공격 성공] {name} → {target.name}, " +
@@ -201,5 +228,14 @@ private void RpcPlayAttackAnimation()
         }
 
         Gizmos.DrawLine(origin, previousPoint);
+    }
+    [TargetRpc]
+    private void TargetPlayAttackSound(
+        NetworkConnectionToClient target)
+    {
+        if (attackAudioSource == null || attackSound == null)
+            return;
+
+        attackAudioSource.PlayOneShot(attackSound);
     }
 }
