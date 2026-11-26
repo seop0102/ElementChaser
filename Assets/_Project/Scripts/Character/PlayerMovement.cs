@@ -19,6 +19,13 @@ public class PlayerMovement : NetworkBehaviour
 
 private PlayerRoleSync roleSync;
 
+[Header("발소리")]
+[SerializeField] private AudioSource footstepAudio;
+
+private bool footstepsMoving;
+private bool footstepsSprinting;
+
+
 
     private CharacterController controller;
     private float verticalVelocity;
@@ -188,6 +195,7 @@ void Update()
 
     // 로컬 플레이어, 게임 씬, 스폰 완료 확인
     if (!isLocalPlayer || !isGameScene || !spawnReady)
+        SetFootsteps(false, false);
         return;
 
     // 사망한 플레이어는 이동 불가능
@@ -197,7 +205,7 @@ void Update()
     {
         if (animationSync != null)
             animationSync.SetMoving(false);
-
+        SetFootsteps(false, false);
         return;
     }
 
@@ -206,6 +214,7 @@ void Update()
             GameStateManager.Instance.CurrentPhase != GamePhase.Playing)
         {
             animationSync?.SetMoving(false);
+            SetFootsteps(false, false);
             return;
         }
 
@@ -232,7 +241,7 @@ void Update()
 
                 controller.Move(fixedPosition - transform.position);
             }
-
+            SetFootsteps(false, false);
             return;
         }
 
@@ -328,6 +337,74 @@ if (isSprinting && input.sqrMagnitude > 0.01f)
         if (prison != null)
             targetPosition = prison.ConstrainPosition(targetPosition);
 
-        controller.Move(targetPosition - transform.position);
+        
+Vector3 beforePosition = transform.position;
+
+controller.Move(targetPosition - transform.position);
+
+// 실제 수평 이동 거리 확인
+Vector3 actualMovement = transform.position - beforePosition;
+actualMovement.y = 0f;
+
+bool isActuallyMoving =
+    actualMovement.sqrMagnitude > 0.000001f;
+
+// 실제 이동 중일 때만 발소리
+SetFootsteps(isActuallyMoving, isSprinting);
+
     }
+
+private void SetFootsteps(bool moving, bool sprinting)
+{
+    sprinting = moving && sprinting;
+
+    // 상태가 변하지 않았다면 네트워크 전송 생략
+    if (footstepsMoving == moving &&
+        footstepsSprinting == sprinting)
+        return;
+
+    footstepsMoving = moving;
+    footstepsSprinting = sprinting;
+
+    // 자기 발소리는 즉시 적용
+    ApplyFootsteps(moving, sprinting);
+
+    if (isLocalPlayer)
+        CmdSetFootsteps(moving, sprinting);
+}
+
+private void ApplyFootsteps(bool moving, bool sprinting)
+{
+    if (footstepAudio == null)
+        return;
+
+    if (!moving)
+    {
+        footstepAudio.Stop();
+        return;
+    }
+
+    // 달릴 때 발소리도 빨라짐
+    footstepAudio.pitch = sprinting ? 1.35f : 1f;
+
+    if (!footstepAudio.isPlaying)
+        footstepAudio.Play();
+}
+
+[Command]
+private void CmdSetFootsteps(bool moving, bool sprinting)
+{
+    RpcSetFootsteps(moving, sprinting);
+}
+
+[ClientRpc]
+private void RpcSetFootsteps(bool moving, bool sprinting)
+{
+    // 자기 발소리는 이미 로컬에서 재생했으므로 중복 방지
+    if (isLocalPlayer)
+        return;
+
+    ApplyFootsteps(moving, sprinting);
+}
+
 }
