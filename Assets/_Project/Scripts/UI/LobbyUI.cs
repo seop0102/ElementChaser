@@ -64,7 +64,7 @@ public class LobbyUI : MonoBehaviour
             ? manager.LobbyPlayerCount
             : 0;
 
-        _playerCountText.text = $"{playerCount}/4";
+        _playerCountText.text = $"{playerCount} / 4";
 
         bool isHost = NetworkServer.active;
 
@@ -79,7 +79,14 @@ public class LobbyUI : MonoBehaviour
             playerCount == 4 &&
             namesReady;
         
-        
+        CanvasGroup canvasGroup =
+            _startGameButton.GetComponent<CanvasGroup>();
+
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha =
+                _startGameButton.interactable ? 1f : 0.5f;
+        }
         LobbyCharacterPreviewManager previewManager =
             FindAnyObjectByType<LobbyCharacterPreviewManager>();
 
