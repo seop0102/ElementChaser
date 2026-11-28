@@ -195,8 +195,11 @@ void Update()
 
     // 로컬 플레이어, 게임 씬, 스폰 완료 확인
     if (!isLocalPlayer || !isGameScene || !spawnReady)
+    {   
         SetFootsteps(false, false);
         return;
+    }
+
 
     // 사망한 플레이어는 이동 불가능
     PlayerHealth health = GetComponent<PlayerHealth>();
