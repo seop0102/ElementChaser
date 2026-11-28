@@ -19,25 +19,25 @@ public class InventoryTest : NetworkBehaviour
             return;
 
         // 1 키: 물 포인트 +1
-        if (Keyboard.current.digit1Key.wasPressedThisFrame)
+        if (Keyboard.current.digit2Key.wasPressedThisFrame)
         {
             CmdRequestAddElementPoints(ElementType.Water);
         }
 
         // 2 키: 불 포인트 +1
-        if (Keyboard.current.digit2Key.wasPressedThisFrame)
+        if (Keyboard.current.digit3Key.wasPressedThisFrame)
         {
             CmdRequestAddElementPoints(ElementType.Fire);
         }
 
-        // 3 키: 물 포인트 +1
-        if (Keyboard.current.digit3Key.wasPressedThisFrame)
+        // 3 키: 풀 포인트 +1
+        if (Keyboard.current.digit4Key.wasPressedThisFrame)
         {
             CmdRequestAddElementPoints(ElementType.Grass);
         }
 
         // 4 키: 바람 포인트 +1
-        if (Keyboard.current.digit4Key.wasPressedThisFrame)
+        if (Keyboard.current.digit1Key.wasPressedThisFrame)
         {
             CmdRequestAddElementPoints(ElementType.Wind);
         }
