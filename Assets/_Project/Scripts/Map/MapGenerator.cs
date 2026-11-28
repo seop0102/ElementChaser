@@ -30,6 +30,16 @@ public class MapGenerator : MonoBehaviour
     private Tile[] tiles;
     private System.Random rng;
 
+    [Header("Background Settings")]
+    public GameObject squareBackground;
+    public GameObject triangleBackground;
+    public GameObject circleBackground;
+
+    [Header("Skybox Settings")]
+    public Material squareSkybox;
+    public Material triangleSkybox;
+    public Material circleSkybox;
+
     void Awake()
     {
         // 4개의 타일을 배열에 넣음
@@ -52,6 +62,10 @@ public class MapGenerator : MonoBehaviour
     public void GenerateMap(MapShape selectedShape, int seed)
     {
         mapShape = selectedShape;
+
+        SetBackground(selectedShape);
+
+        SetSkybox(selectedShape);
 
         // Seed를 이용해 랜덤 생성기 초기화
         rng = new System.Random(seed);
@@ -250,5 +264,45 @@ public class MapGenerator : MonoBehaviour
         position.z = z;
 
         point.position = position;
+    }
+
+    public void SetBackground(MapShape shape)
+    {
+        squareBackground.SetActive(false);
+        triangleBackground.SetActive(false);
+        circleBackground.SetActive(false);
+
+        switch (shape)
+        {
+            case MapShape.Square:
+                squareBackground.SetActive(true);
+                break;
+
+            case MapShape.Triangle:
+                triangleBackground.SetActive(true);
+                break;
+
+            case MapShape.Circle:
+                circleBackground.SetActive(true);
+                break;
+        }
+    }
+
+    void SetSkybox(MapShape shape)
+    {
+        switch (shape)
+        {
+            case MapShape.Square:
+                RenderSettings.skybox = squareSkybox;
+                break;
+
+            case MapShape.Triangle:
+                RenderSettings.skybox = triangleSkybox;
+                break;
+
+            case MapShape.Circle:
+                RenderSettings.skybox = circleSkybox;
+                break;
+        }
     }
 }
