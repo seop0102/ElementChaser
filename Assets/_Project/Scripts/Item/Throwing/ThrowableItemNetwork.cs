@@ -180,7 +180,7 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
 
             if (definition.IsThrowable)
             {
-                if (!this.IsValidThrowAim(origin, direction))
+                if (!this.IsValidThrowAim(item,origin, direction))
                 {
                     return;
                 }
@@ -228,7 +228,10 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
         }
     }
 
-    private bool IsValidThrowAim(Vector3 origin, Vector3 direction)
+    private bool IsValidThrowAim(
+        ItemType item,
+        Vector3 origin,
+        Vector3 direction)
     {
         if (!IsFinite(origin) || !IsFinite(direction))
         {
@@ -264,10 +267,10 @@ public sealed class ThrowableItemNetwork : NetworkBehaviour
         return !Physics.Linecast(
             referencePosition,
             origin,
-            this._controller.ThrowCollisionMask,
+            this._controller.GetThrowCollisionMask(item),
             QueryTriggerInteraction.Ignore);
     }
-
+   
     private static bool IsFinite(Vector3 value)
     {
         return !float.IsNaN(value.x) && !float.IsInfinity(value.x)

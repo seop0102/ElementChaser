@@ -2016,6 +2016,9 @@ MonoBehaviour:
   _defaultCollisionMask:
     serializedVersion: 2
     m_Bits: 192
+  _bombAdditionalCollisionMask:
+    serializedVersion: 2
+    m_Bits: 256
   _defaultLandingRadius: 3
 --- !u!114 &5450548798855349206
 MonoBehaviour:

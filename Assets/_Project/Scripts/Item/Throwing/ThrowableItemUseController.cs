@@ -13,7 +13,10 @@ public sealed class ThrowableItemUseController : MonoBehaviour
 
     //인벤 아이템 종류 전달-> 필요한 정보 어디서 가져올지
     [Tooltip("투척 경로 검사에 사용할 레이어")]  
-    [SerializeField] private LayerMask _defaultCollisionMask;   
+    [SerializeField] private LayerMask _defaultCollisionMask;
+    // 폭탄 특수
+    [Tooltip("폭탄만 추가로 검사할 레이어")]
+    [SerializeField] private LayerMask _bombAdditionalCollisionMask;
 
     [Tooltip("원형 착지 미리보기 반지름")]
     [SerializeField, Min(0f)] private float _defaultLandingRadius = 3f;
@@ -40,7 +43,16 @@ public sealed class ThrowableItemUseController : MonoBehaviour
     // 요청자에게 전달하는 실제 사ㅣ용 결과
     public event Action<ItemType, bool> ThrowRequestCompleted;
 
-    internal LayerMask ThrowCollisionMask => this._defaultCollisionMask;
+    // 아이템별 투척 충돌 레이어 - 폭탄만 빼려고
+    internal LayerMask GetThrowCollisionMask(ItemType item)
+    {
+        if (item == ItemType.Bomb)
+        {
+            return (LayerMask)(this._defaultCollisionMask.value | this._bombAdditionalCollisionMask.value);
+        }
+        return this._defaultCollisionMask;
+    }
+
     internal ThrowableLauncher Launcher => this._launcher;
     public bool HasInventoryHandlers =>this._canUseItem != null && this._onUseCompleted != null;
 
@@ -157,7 +169,7 @@ public sealed class ThrowableItemUseController : MonoBehaviour
         this.SelectItem(
             definition,
             definition.ImpactEffect.GetPreviewRadius(this._defaultLandingRadius),
-            this._defaultCollisionMask,
+            this.GetThrowCollisionMask(definition.Item),
             isImpactSurface,
             isImpactSurface);
     }
@@ -250,10 +262,10 @@ public sealed class ThrowableItemUseController : MonoBehaviour
         {
             float landingRadius = this._landingRadius;
 
-            // 벽 직격은 범위 폭발이 아닌 타격 지점 표시
+            // 설치 벽과 감옥 직격은 타격 지점만 표시
             if (this._selectedItem.Item == ItemType.Bomb
                 && prediction.TryGetLandingHit(out RaycastHit impactHit)
-                && IsItemWallHit(impactHit))
+                && (IsItemWallHit(impactHit) || IsPrisonHit(impactHit)))
             {
                 landingRadius = 0.08f;
             }
@@ -421,21 +433,17 @@ public sealed class ThrowableItemUseController : MonoBehaviour
             || this._launcher == null
             || this._defaultCollisionMask.value == 0)
         {
-            Debug.LogWarning(
-                "호스트의 아이템 정의와 투척 설정을 확인하세요.",
-                this);
-
+            Debug.LogWarning("호스트의 아이템 정의와 투척 설정을 확인하세요.", this);
             return false;
         }
 
-        Func<RaycastHit, bool> isImpactSurface =
-            hit => IsItemImpactSurface(definition.Item, hit);
+        Func<RaycastHit, bool> isImpactSurface = hit => IsItemImpactSurface(item, hit);
 
         return this._launcher.TryLaunch(
             definition,
             origin,
             direction,
-            this._defaultCollisionMask,
+            this.GetThrowCollisionMask(item),
             isImpactSurface,
             isImpactSurface);
     }
@@ -481,13 +489,18 @@ public sealed class ThrowableItemUseController : MonoBehaviour
         this.HeldItemRequestCompleted?.Invoke(item, isAccepted);
     }
 
-    // 폭탄은 설치 벽에서도 비행 종료
+    // 폭탄은 설치 벽과 감옥에서도 비행 종료
     private static bool IsItemImpactSurface(
         ItemType item,
         RaycastHit hit)
     {
-        return IsTileTop(hit)
-            || (item == ItemType.Bomb && IsItemWallHit(hit));
+        return IsTileTop(hit) || (item == ItemType.Bomb  && (IsItemWallHit(hit) || IsPrisonHit(hit)));
+    }
+
+    // 충돌한 대상이 감옥인지 확인
+    private static bool IsPrisonHit(RaycastHit hit)
+    {
+        return hit.collider != null && hit.collider.GetComponentInParent<NetworkPrison>() != null;
     }
 
     // 충돌한 대상이 설치 벽인지 확인

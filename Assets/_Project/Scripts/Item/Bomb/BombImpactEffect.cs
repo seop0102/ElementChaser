@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
 // 폭탄 직격과 바닥 폭발의 벽 파괴
 [CreateAssetMenu(
@@ -13,6 +14,9 @@ public sealed class BombImpactEffect : ThrowableImpactEffect
     [Tooltip("설치 벽의 레이어")]
     [SerializeField] private LayerMask _wallMask;
 
+    [Tooltip("감옥의 레이어")]
+    [SerializeField] private LayerMask _prisonMask;
+
     public override float GetPreviewRadius(float defaultRadius)
     {
         return this._settings != null
@@ -20,7 +24,8 @@ public sealed class BombImpactEffect : ThrowableImpactEffect
             : defaultRadius;
     }
 
-    // 실제 충돌 정보로 벽 파괴
+    // 벽, 감옥 직격: 해당 벽 파괴,해당 감옥 구출 
+    // 바닥 폭발: 범위 내 모든 벽 파괴,모든 감옥 구출
     public override GameObject ActivateAtHit(
         RaycastHit hit,
         WallPlacement? wallPlacement,
@@ -31,8 +36,9 @@ public sealed class BombImpactEffect : ThrowableImpactEffect
             return null;
         }
 
-        ItemWallInstance directWall =
-            hit.collider.GetComponentInParent<ItemWallInstance>();
+        ItemWallInstance directWall = hit.collider.GetComponentInParent<ItemWallInstance>();
+
+        NetworkPrison directPrison = hit.collider.GetComponentInParent<NetworkPrison>();
 
         Vector3 position = hit.point;
 
@@ -51,12 +57,22 @@ public sealed class BombImpactEffect : ThrowableImpactEffect
 
         if (directWall != null)
         {
-            // 직격은 맞은 벽 하나만 파괴
+            // 설치 벽 직격
             directWall.TryDestroy();
+        }
+        else if (directPrison != null)
+        {
+            // 감옥 직격
+            if (NetworkServer.active)
+            {
+                directPrison.ServerRescueAll();
+            }
         }
         else
         {
+            // 바닥 폭발
             this.DestroyWallsInRange(position);
+            this.RescuePrisonsInRange(position);
         }
 
         return explosion;
@@ -166,16 +182,55 @@ public sealed class BombImpactEffect : ThrowableImpactEffect
         }
     }
 
+    // 폭발 범위에 걸친 모든 감옥 해제,구출(기존 감옥쪽 api호출-r키랑 같은처리)
+    private void RescuePrisonsInRange(Vector3 position)
+    {
+        if (!NetworkServer.active)
+        {
+            return;
+        }
+
+        Collider[] overlaps = Physics.OverlapSphere(
+            position,
+            this._settings.BlastRadius,
+            this._prisonMask,
+            QueryTriggerInteraction.Ignore);
+
+        var prisons = new HashSet<NetworkPrison>();
+
+        foreach (Collider overlap in overlaps)
+        {
+            if (overlap == null)
+            {
+                continue;
+            }
+
+            NetworkPrison prison =
+                overlap.GetComponentInParent<NetworkPrison>();
+
+            if (prison != null)
+            {
+                prisons.Add(prison);
+            }
+        }
+
+        foreach (NetworkPrison prison in prisons)
+        {
+            if (prison != null)
+            {
+                prison.ServerRescueAll();
+            }
+        }
+    }
+
     private bool TryValidateSettings()
     {
         if (this._settings == null
             || this._explosionPrefab == null
-            || this._wallMask.value == 0)
+            || this._wallMask.value == 0
+            || this._prisonMask.value == 0)
         {
-            Debug.LogError(
-                "폭탄 설정과 폭발 프리팹, 벽 레이어를 연결하세요.",
-                this);
-
+            Debug.LogError("폭탄 설정과 폭발 프리팹, 벽과 감옥 레이어를 연결하세요.",this);
             return false;
         }
 
